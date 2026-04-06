@@ -1,0 +1,128 @@
+CREATE DATABASE IF NOT EXISTS pulsenet
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE pulsenet;
+
+CREATE TABLE IF NOT EXISTS users (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  username      VARCHAR(40)  NOT NULL UNIQUE,
+  firstName     VARCHAR(100) NOT NULL,
+  lastName      VARCHAR(100) NOT NULL,
+  email         VARCHAR(120) NOT NULL UNIQUE,
+  passwordHash  VARCHAR(255) NOT NULL,
+  bio           VARCHAR(300) NULL,
+  profileImage  TEXT NULL,
+  role          ENUM('user','admin') DEFAULT 'user',
+  isActive      TINYINT(1) DEFAULT 1,
+  createdAt     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt     DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS communities (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name          VARCHAR(80)  NOT NULL UNIQUE,
+  description   VARCHAR(500) NULL,
+  rules         TEXT NULL,
+  avatarUrl     TEXT NULL,
+  type          ENUM('public','private') DEFAULT 'public',
+  createdBy     INT UNSIGNED NOT NULL,
+  createdAt     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt     DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (createdBy) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS community_members (
+  communityId   INT UNSIGNED NOT NULL,
+  userId        INT UNSIGNED NOT NULL,
+  role          ENUM('moderator','member') DEFAULT 'member',
+  status        ENUM('active','pending','banned') DEFAULT 'active',
+  joinedAt      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (communityId, userId),
+  FOREIGN KEY (communityId) REFERENCES communities(id) ON DELETE CASCADE,
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS posts (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  communityId   INT UNSIGNED NOT NULL,
+  authorId      INT UNSIGNED NOT NULL,
+  title         VARCHAR(200) NOT NULL,
+  content       TEXT NOT NULL,
+  mediaUrl      TEXT NULL,
+  isDeleted     TINYINT(1) DEFAULT 0,
+  createdAt     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt     DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (communityId) REFERENCES communities(id) ON DELETE CASCADE,
+  FOREIGN KEY (authorId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS tags (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name          VARCHAR(50) NOT NULL UNIQUE,
+  createdBy     INT UNSIGNED NOT NULL,
+  createdAt     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (createdBy) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS post_tags (
+  postId        INT UNSIGNED NOT NULL,
+  tagId         INT UNSIGNED NOT NULL,
+  PRIMARY KEY (postId, tagId),
+  FOREIGN KEY (postId) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (tagId) REFERENCES tags(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS post_likes (
+  userId        INT UNSIGNED NOT NULL,
+  postId        INT UNSIGNED NOT NULL,
+  likedAt       DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (userId, postId),
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (postId) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  postId        INT UNSIGNED NOT NULL,
+  authorId      INT UNSIGNED NOT NULL,
+  parentId      INT UNSIGNED NULL,
+  content       VARCHAR(2000) NOT NULL,
+  isDeleted     TINYINT(1) DEFAULT 0,
+  isFlagged     TINYINT(1) DEFAULT 0,
+  createdAt     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt     DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (postId) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (authorId) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (parentId) REFERENCES comments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS comment_likes (
+  userId        INT UNSIGNED NOT NULL,
+  commentId     INT UNSIGNED NOT NULL,
+  likedAt       DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (userId, commentId),
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (commentId) REFERENCES comments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_follows (
+  followerId    INT UNSIGNED NOT NULL,
+  followingId   INT UNSIGNED NOT NULL,
+  followedAt    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (followerId, followingId),
+  FOREIGN KEY (followerId) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (followingId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS audits (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  userId        INT UNSIGNED NULL,
+  action        VARCHAR(80) NOT NULL,
+  entity        VARCHAR(40) NULL,
+  entityId      INT UNSIGNED NULL,
+  meta          TEXT NULL,
+  ipAddress     VARCHAR(45) NULL,
+  createdAt     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+);
