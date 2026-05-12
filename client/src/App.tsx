@@ -8,6 +8,11 @@ import NotFoundPage from "./pages/not_found/NotFoundPage";
 import UserDashboard from "./pages/user/UserDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UsersPage from "./pages/admin/UsersPage";
+import CommunitiesPage from "./pages/communities/CommunitiesPage";
+import MyCommunitiesPage from "./pages/communities/MyCommunitiesPage";
+import CreateCommunityPage from "./pages/communities/CreateCommunityPage";
+import CommunityDetailsPage from "./pages/communities/CommunityDetailsPage";
+import AdminCommunitiesPage from "./pages/admin/AdminCommunitiesPage";
 
 export default function App() {
   return (
@@ -17,10 +22,17 @@ export default function App() {
 
       {/* User routes */}
       <Route path="/dashboard" element={<ProtectedRoute requiredRole="user"><UserDashboard /></ProtectedRoute>} />
+      <Route path="/my-communities" element={<ProtectedRoute requiredRole="user"><MyCommunitiesPage /></ProtectedRoute>} />
+      <Route path="/communities/create" element={<ProtectedRoute requiredRole="user"><CreateCommunityPage /></ProtectedRoute>} />
+      <Route path="/communities/:id" element={<ProtectedRoute requiredRole="user"><CommunityDetailsPage /></ProtectedRoute>} />
 
       {/* Admin routes */}
       <Route path="/admin"       element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><UsersPage /></ProtectedRoute>} />
+      <Route path="/admin/communities" element={<ProtectedRoute requiredRole="admin"><AdminCommunitiesPage /></ProtectedRoute>} />
+
+      {/* Public routes */}
+      <Route path="/communities" element={<CommunitiesPage />} />
 
       <Route path="/"    element={<Navigate to="/login" replace />} />
       <Route path="/404" element={<NotFoundPage />} />
