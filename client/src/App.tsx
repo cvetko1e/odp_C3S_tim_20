@@ -1,3 +1,7 @@
+import { PostDetailsPage } from "./pages/posts/PostDetailsPage";
+import { CreatePostPage } from "./pages/posts/CreatePostPage";
+import { EditPostPage } from "./pages/posts/EditPostPage";
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/protected_route/ProtectedRoute";
 
@@ -25,6 +29,11 @@ export default function App() {
       <Route path="/my-communities" element={<ProtectedRoute requiredRole="user"><MyCommunitiesPage /></ProtectedRoute>} />
       <Route path="/communities/create" element={<ProtectedRoute requiredRole="user"><CreateCommunityPage /></ProtectedRoute>} />
       <Route path="/communities/:id" element={<ProtectedRoute requiredRole="user"><CommunityDetailsPage /></ProtectedRoute>} />
+      
+      {/* NOVE RUTE ZA OBJAVE (ZAŠTIĆENE ZA USER ULOGU) */}
+      <Route path="/posts/:id" element={<ProtectedRoute requiredRole="user"><PostDetailsPage /></ProtectedRoute>} />
+      <Route path="/communities/:communityId/posts/create" element={<ProtectedRoute requiredRole="user"><CreatePostPage /></ProtectedRoute>} />
+      <Route path="/posts/edit/:id" element={<ProtectedRoute requiredRole="user"><EditPostPage /></ProtectedRoute>} />
 
       {/* Admin routes */}
       <Route path="/admin"       element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
