@@ -1,52 +1,55 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { postApi } from "../../api_services/posts/PostAPIService";
+import { tagApi } from "../../api_services/tags/TagAPIService";
 import { PostForm } from "../../components/posts/PostForm";
-import AuthContext from "../../contexts/auth/AuthContext";
+import { useAuth } from "../../hooks/auth/useAuthHook";
 import type { Post } from "../../types/posts/Post";
+import type { Tag } from "../../types/tags/Tag";
 
 export const EditPostPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
-  const auth = useContext(AuthContext) as { token?: string; user?: { id: number; role: string } };
-  const token = auth?.token;
-  const user = auth?.user;
-  
+
+  const { token, user } = useAuth();
+
   const [post, setPost] = useState<Post | null>(null);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const postId = parseInt(id || "0", 10);
+  const postId = Number.parseInt(id || "0", 10);
 
   useEffect(() => {
     if (!postId || !token) return;
 
-    postApi.getPostById(postId, token).then((data) => {
+    Promise.all([postApi.getPostById(postId, token), tagApi.getAllTags()]).then(([data, tags]) => {
       if (data) {
         if (user && data.authorId !== user.id) {
-          alert("Nemate ovlašćenje za izmenu ove objave.");
+          alert("Nemate ovlascenje za izmenu ove objave.");
           navigate(-1);
           return;
         }
         setPost(data);
       }
+
+      setAvailableTags(tags);
       setLoading(false);
     });
   }, [postId, token, user, navigate]);
 
-  const handleSubmit = async (data: { title: string; content: string; imageUrl: string | null }) => {
+  const handleSubmit = async (data: { title: string; content: string; imageUrl: string | null; tagIds: number[] }) => {
     if (!token || !post) return;
 
     const success = await postApi.updatePost(token, post.id, data.title, data.content, data.imageUrl);
     if (success) {
       navigate(`/posts/${post.id}`);
     } else {
-      alert("Greška prilikom izmene objave.");
+      alert("Greska prilikom izmene objave.");
     }
   };
 
-  if (loading) return <div className="text-center py-10">Učitavanje podataka...</div>;
-  if (!post) return <div className="text-center py-10 text-red-500">Objava nije pronađena.</div>;
+  if (loading) return <div className="text-center py-10">Ucitavanje podataka...</div>;
+  if (!post) return <div className="text-center py-10 text-red-500">Objava nije pronadjena.</div>;
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
@@ -55,11 +58,11 @@ export const EditPostPage: React.FC = () => {
         initialTitle={post.title}
         initialContent={post.content}
         initialImageUrl={post.imageUrl || ""}
-        initialTagIds={post.tags?.map((t) => t.id) || []}
-        availableTags={post.tags || []}
+        initialTagIds={post.tags?.map((tag) => tag.id) || []}
+        availableTags={availableTags}
         onSubmit={handleSubmit}
         onCancel={() => navigate(-1)}
-        submitLabel="Sačuvaj izmene"
+        submitLabel="Sacuvaj izmene"
       />
     </div>
   );

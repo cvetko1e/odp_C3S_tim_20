@@ -1,8 +1,8 @@
-import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { DbManager } from "../../connection/DbConnectionPool";
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
 import { ITagRepository } from "../../../Domain/repositories/Tag/ITagRepository";
 import { Tag } from "../../../Domain/models/Tag";
+import type { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 
 type TagRow = RowDataPacket & {
   id: number;
@@ -23,12 +23,10 @@ export class TagRepository implements ITagRepository {
     const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
-      const [rows] = await res.conn.execute<TagRow[]>(
-        `SELECT id, name FROM tags ORDER BY name ASC`
-      );
+      const [rows] = await res.conn.execute<TagRow[]>(`SELECT id, name FROM tags ORDER BY name ASC`);
       return rows.map((row) => this.map(row));
-    } catch (err) {
-      this.logger.error("TagRepository", "findAll failed", err);
+    } catch {
+      this.logger.error("TagRepository", "findAll failed");
       return [];
     } finally {
       res.conn.release();
@@ -39,13 +37,10 @@ export class TagRepository implements ITagRepository {
     const res = await this.db.getReadConnection();
     if (!res) return null;
     try {
-      const [rows] = await res.conn.execute<TagRow[]>(
-        `SELECT id, name FROM tags WHERE id = ?`,
-        [id]
-      );
+      const [rows] = await res.conn.execute<TagRow[]>(`SELECT id, name FROM tags WHERE id = ?`, [id]);
       return rows.length > 0 ? this.map(rows[0]) : null;
-    } catch (err) {
-      this.logger.error("TagRepository", "findById failed", err);
+    } catch {
+      this.logger.error("TagRepository", "findById failed");
       return null;
     } finally {
       res.conn.release();
@@ -56,31 +51,28 @@ export class TagRepository implements ITagRepository {
     const res = await this.db.getReadConnection();
     if (!res) return null;
     try {
-      const [rows] = await res.conn.execute<TagRow[]>(
-        `SELECT id, name FROM tags WHERE name = ?`,
-        [name]
-      );
+      const [rows] = await res.conn.execute<TagRow[]>(`SELECT id, name FROM tags WHERE name = ?`, [name]);
       return rows.length > 0 ? this.map(rows[0]) : null;
-    } catch (err) {
-      this.logger.error("TagRepository", "findByName failed", err);
+    } catch {
+      this.logger.error("TagRepository", "findByName failed");
       return null;
     } finally {
       res.conn.release();
     }
   }
 
-  public async create(name: string): Promise<Tag> {
+  public async create(name: string, createdBy: number): Promise<Tag | null> {
     const res = await this.db.getWriteConnection();
-    if (!res) throw new Error("Database connection unavailable");
+    if (!res) return null;
     try {
       const [result] = await res.conn.execute<ResultSetHeader>(
-        `INSERT INTO tags (name) VALUES (?)`,
-        [name]
+        `INSERT INTO tags (name, createdBy) VALUES (?, ?)`,
+        [name, createdBy]
       );
       return new Tag(result.insertId, name);
-    } catch (err) {
-      this.logger.error("TagRepository", "create failed", err);
-      throw err;
+    } catch {
+      this.logger.error("TagRepository", "create failed");
+      return null;
     } finally {
       res.conn.release();
     }
@@ -90,13 +82,10 @@ export class TagRepository implements ITagRepository {
     const res = await this.db.getWriteConnection();
     if (!res) return false;
     try {
-      const [result] = await res.conn.execute<ResultSetHeader>(
-        `DELETE FROM tags WHERE id = ?`,
-        [id]
-      );
+      const [result] = await res.conn.execute<ResultSetHeader>(`DELETE FROM tags WHERE id = ?`, [id]);
       return result.affectedRows > 0;
-    } catch (err) {
-      this.logger.error("TagRepository", "delete failed", err);
+    } catch {
+      this.logger.error("TagRepository", "delete failed");
       return false;
     } finally {
       res.conn.release();

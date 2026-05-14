@@ -27,7 +27,7 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
       }`}
     >
       <svg
-        xmlns="w3.org"
+        xmlns="http://www.w3.org/2000/svg"
         fill={isLiked ? "currentColor" : "none"}
         viewBox="0 0 24 24"
         strokeWidth={2}

@@ -1,9 +1,9 @@
-import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { DbManager } from "../../connection/DbConnectionPool";
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
-import { IPostRepository } from "../../../Domain/repositories/Post/IPostRepository";
+import { IPostRepository } from "../../../Domain/repositories/post/IPostRepository";
 import { Post } from "../../../Domain/models/Post";
 import { Tag } from "../../../Domain/models/Tag";
+import type { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 
 type PostRow = RowDataPacket & {
   id: number;
@@ -41,29 +41,28 @@ export class PostRepository implements IPostRepository {
       row.authorUsername ?? null,
       row.likesCount ?? 0,
       row.commentsCount ?? 0,
-      [] // Tagovi se lepe naknadno
+      []
     );
   }
 
-  private async populateTagsForPosts(posts: Post[], conn: any): Promise<void> {
+  private async populateTagsForPosts(posts: Post[], conn: PoolConnection): Promise<void> {
     if (posts.length === 0) return;
-    const postIds = posts.map(p => p.id);
+
+    const postIds = posts.map((post) => post.id);
     const placeholders = postIds.map(() => "?").join(", ");
-    
-    const [tagRows] = await conn.execute(
-      `SELECT t.id, t.name, pt.postId 
+
+    const [tagRows] = await conn.execute<PostTagRow[]>(
+      `SELECT t.id, t.name, pt.postId
        FROM tags t
        INNER JOIN post_tags pt ON pt.tagId = t.id
        WHERE pt.postId IN (${placeholders})`,
       postIds
     );
 
-    const rows = tagRows as PostTagRow[];
-
-    posts.forEach(post => {
-      const postTags = rows
-        .filter(r => r.postId === post.id)
-        .map(r => new Tag(r.id, r.name));
+    posts.forEach((post) => {
+      const postTags = tagRows
+        .filter((row) => row.postId === post.id)
+        .map((row) => new Tag(row.id, row.name));
       post.tags = postTags;
     });
   }
@@ -73,7 +72,8 @@ export class PostRepository implements IPostRepository {
     if (!res) return null;
     try {
       const [rows] = await res.conn.execute<PostRow[]>(
-        `SELECT p.*, u.username AS authorUsername,
+        `SELECT p.id, p.title, p.content, p.mediaUrl AS imageUrl, p.authorId, p.communityId, p.createdAt, p.updatedAt,
+                u.username AS authorUsername,
                 (SELECT COUNT(*) FROM post_likes WHERE postId = p.id) AS likesCount,
                 (SELECT COUNT(*) FROM comments WHERE postId = p.id) AS commentsCount
          FROM posts p
@@ -82,12 +82,11 @@ export class PostRepository implements IPostRepository {
         [id]
       );
       if (rows.length === 0) return null;
-      // ISPRAVLJENO: Prosleđujemo rows[0] jer map metoda očekuje jedan red, a ne ceo niz
-      const post = this.map(rows[0]); 
+      const post = this.map(rows[0]);
       await this.populateTagsForPosts([post], res.conn);
       return post;
-    } catch (err) {
-      this.logger.error("PostRepository", "findById failed", err);
+    } catch {
+      this.logger.error("PostRepository", "findById failed");
       return null;
     } finally {
       res.conn.release();
@@ -99,7 +98,8 @@ export class PostRepository implements IPostRepository {
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<PostRow[]>(
-        `SELECT p.*, u.username AS authorUsername,
+        `SELECT p.id, p.title, p.content, p.mediaUrl AS imageUrl, p.authorId, p.communityId, p.createdAt, p.updatedAt,
+                u.username AS authorUsername,
                 (SELECT COUNT(*) FROM post_likes WHERE postId = p.id) AS likesCount,
                 (SELECT COUNT(*) FROM comments WHERE postId = p.id) AS commentsCount
          FROM posts p
@@ -108,11 +108,11 @@ export class PostRepository implements IPostRepository {
          ORDER BY p.id DESC`,
         [communityId]
       );
-      const posts = rows.map(row => this.map(row));
+      const posts = rows.map((row) => this.map(row));
       await this.populateTagsForPosts(posts, res.conn);
       return posts;
-    } catch (err) {
-      this.logger.error("PostRepository", "findByCommunityId failed", err);
+    } catch {
+      this.logger.error("PostRepository", "findByCommunityId failed");
       return [];
     } finally {
       res.conn.release();
@@ -123,9 +123,9 @@ export class PostRepository implements IPostRepository {
     const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
-      
       const [rows] = await res.conn.execute<PostRow[]>(
-        `SELECT DISTINCT p.*, u.username AS authorUsername,
+        `SELECT DISTINCT p.id, p.title, p.content, p.mediaUrl AS imageUrl, p.authorId, p.communityId, p.createdAt, p.updatedAt,
+                u.username AS authorUsername,
                 (SELECT COUNT(*) FROM post_likes WHERE postId = p.id) AS likesCount,
                 (SELECT COUNT(*) FROM comments WHERE postId = p.id) AS commentsCount
          FROM posts p
@@ -135,30 +135,30 @@ export class PostRepository implements IPostRepository {
          ORDER BY p.id DESC`,
         [userId, userId]
       );
-      const posts = rows.map(row => this.map(row));
+      const posts = rows.map((row) => this.map(row));
       await this.populateTagsForPosts(posts, res.conn);
       return posts;
-    } catch (err) {
-      this.logger.error("PostRepository", "getFeed failed", err);
+    } catch {
+      this.logger.error("PostRepository", "getFeed failed");
       return [];
     } finally {
       res.conn.release();
     }
   }
 
-  public async create(post: Post): Promise<number> {
+  public async create(post: Post): Promise<number | null> {
     const res = await this.db.getWriteConnection();
-    if (!res) throw new Error("Database connection unavailable");
+    if (!res) return null;
     try {
       const [result] = await res.conn.execute<ResultSetHeader>(
-        `INSERT INTO posts (title, content, imageUrl, authorId, communityId)
+        `INSERT INTO posts (communityId, authorId, title, content, mediaUrl)
          VALUES (?, ?, ?, ?, ?)`,
-        [post.title, post.content, post.imageUrl, post.authorId, post.communityId]
+        [post.communityId, post.authorId, post.title, post.content, post.imageUrl]
       );
       return result.insertId;
-    } catch (err) {
-      this.logger.error("PostRepository", "create failed", err);
-      throw err;
+    } catch {
+      this.logger.error("PostRepository", "create failed");
+      return null;
     } finally {
       res.conn.release();
     }
@@ -169,12 +169,12 @@ export class PostRepository implements IPostRepository {
     if (!res) return false;
     try {
       const [result] = await res.conn.execute<ResultSetHeader>(
-        `UPDATE posts SET title = ?, content = ?, imageUrl = ? WHERE id = ?`,
+        `UPDATE posts SET title = ?, content = ?, mediaUrl = ? WHERE id = ?`,
         [post.title, post.content, post.imageUrl, post.id]
       );
       return result.affectedRows > 0;
-    } catch (err) {
-      this.logger.error("PostRepository", "update failed", err);
+    } catch {
+      this.logger.error("PostRepository", "update failed");
       return false;
     } finally {
       res.conn.release();
@@ -185,30 +185,23 @@ export class PostRepository implements IPostRepository {
     const res = await this.db.getWriteConnection();
     if (!res) return false;
     try {
-      const [result] = await res.conn.execute<ResultSetHeader>(
-        `DELETE FROM posts WHERE id = ?`,
-        [id]
-      );
+      const [result] = await res.conn.execute<ResultSetHeader>(`DELETE FROM posts WHERE id = ?`, [id]);
       return result.affectedRows > 0;
-    } catch (err) {
-      this.logger.error("PostRepository", "delete failed", err);
+    } catch {
+      this.logger.error("PostRepository", "delete failed");
       return false;
     } finally {
       res.conn.release();
     }
   }
 
-  // M:N veze za tagove
   public async addTagToPost(postId: number, tagId: number): Promise<void> {
     const res = await this.db.getWriteConnection();
     if (!res) return;
     try {
-      await res.conn.execute(
-        `INSERT IGNORE INTO post_tags (postId, tagId) VALUES (?, ?)`,
-        [postId, tagId]
-      );
-    } catch (err) {
-      this.logger.error("PostRepository", "addTagToPost failed", err);
+      await res.conn.execute(`INSERT IGNORE INTO post_tags (postId, tagId) VALUES (?, ?)`, [postId, tagId]);
+    } catch {
+      this.logger.error("PostRepository", "addTagToPost failed");
     } finally {
       res.conn.release();
     }
@@ -219,14 +212,13 @@ export class PostRepository implements IPostRepository {
     if (!res) return;
     try {
       await res.conn.execute(`DELETE FROM post_tags WHERE postId = ?`, [postId]);
-    } catch (err) {
-      this.logger.error("PostRepository", "removeTagsFromPost failed", err);
+    } catch {
+      this.logger.error("PostRepository", "removeTagsFromPost failed");
     } finally {
       res.conn.release();
     }
   }
 
-  // M:N veze za lajkove
   public async hasUserLikedPost(postId: number, userId: number): Promise<boolean> {
     const res = await this.db.getReadConnection();
     if (!res) return false;
@@ -236,8 +228,8 @@ export class PostRepository implements IPostRepository {
         [postId, userId]
       );
       return (rows[0]?.cnt ?? 0) > 0;
-    } catch (err) {
-      this.logger.error("PostRepository", "hasUserLikedPost failed", err);
+    } catch {
+      this.logger.error("PostRepository", "hasUserLikedPost failed");
       return false;
     } finally {
       res.conn.release();
@@ -253,8 +245,8 @@ export class PostRepository implements IPostRepository {
         [postId, userId]
       );
       return result.affectedRows > 0;
-    } catch (err) {
-      this.logger.error("PostRepository", "addLike failed", err);
+    } catch {
+      this.logger.error("PostRepository", "addLike failed");
       return false;
     } finally {
       res.conn.release();
@@ -270,8 +262,8 @@ export class PostRepository implements IPostRepository {
         [postId, userId]
       );
       return result.affectedRows > 0;
-    } catch (err) {
-      this.logger.error("PostRepository", "removeLike failed", err);
+    } catch {
+      this.logger.error("PostRepository", "removeLike failed");
       return false;
     } finally {
       res.conn.release();

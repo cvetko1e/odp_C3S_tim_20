@@ -4,6 +4,6 @@ export interface ITagRepository {
   findAll(): Promise<Tag[]>;
   findById(id: number): Promise<Tag | null>;
   findByName(name: string): Promise<Tag | null>;
-  create(name: string): Promise<Tag>;
+  create(name: string, createdBy: number): Promise<Tag | null>;
   delete(id: number): Promise<boolean>;
 }

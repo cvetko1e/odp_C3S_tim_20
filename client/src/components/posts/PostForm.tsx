@@ -20,7 +20,7 @@ export const PostForm: React.FC<PostFormProps> = ({
   availableTags,
   onSubmit,
   onCancel,
-  submitLabel = "Sačuvaj",
+  submitLabel = "Sacuvaj",
 }) => {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
@@ -36,15 +36,37 @@ export const PostForm: React.FC<PostFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) {
-      setError("Naslov i sadržaj su obavezni.");
+
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+    const trimmedImageUrl = imageUrl.trim();
+
+    if (trimmedTitle.length < 5 || trimmedTitle.length > 200) {
+      setError("Naslov mora imati izmedju 5 i 200 karaktera.");
       return;
     }
+
+    if (trimmedContent.length < 10 || trimmedContent.length > 10000) {
+      setError("Sadrzaj mora imati izmedju 10 i 10000 karaktera.");
+      return;
+    }
+
+    if (trimmedImageUrl.length > 1000) {
+      setError("URL slike moze imati najvise 1000 karaktera.");
+      return;
+    }
+
+    const allTagIdsAreNumbers = selectedTagIds.every((tagId) => Number.isInteger(tagId) && tagId > 0);
+    if (!allTagIdsAreNumbers) {
+      setError("Tagovi moraju biti validni brojevi.");
+      return;
+    }
+
     setError(null);
     onSubmit({
-      title: title.trim(),
-      content: content.trim(),
-      imageUrl: imageUrl.trim() || null,
+      title: trimmedTitle,
+      content: trimmedContent,
+      imageUrl: trimmedImageUrl || null,
       tagIds: selectedTagIds,
     });
   };
@@ -65,13 +87,13 @@ export const PostForm: React.FC<PostFormProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Sadržaj (Markdown podržan)</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Sadrzaj (Markdown podrzan)</label>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={6}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-          placeholder="Napišite nešto... Možete koristiti Markdown."
+          placeholder="Napisite nesto... Mozete koristiti Markdown."
         />
       </div>
 
@@ -82,7 +104,7 @@ export const PostForm: React.FC<PostFormProps> = ({
           value={imageUrl}
           onChange={(e) => setImageUrl(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="primer.com"
+          placeholder="https://primer.com/slika.jpg"
         />
       </div>
 
@@ -115,7 +137,7 @@ export const PostForm: React.FC<PostFormProps> = ({
           onClick={onCancel}
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100"
         >
-          Otkaži
+          Otkazi
         </button>
         <button
           type="submit"

@@ -6,16 +6,16 @@ export class TagService implements ITagService {
   public constructor(private readonly tagRepo: ITagRepository) {}
 
   public async getAllTags(): Promise<Tag[]> {
-    return await this.tagRepo.findAll();
+    return this.tagRepo.findAll();
   }
 
-  public async createTag(name: string): Promise<Tag> {
+  public async createTag(name: string, createdBy: number): Promise<Tag | null> {
     const existing = await this.tagRepo.findByName(name);
     if (existing) return existing;
-    return await this.tagRepo.create(name);
+    return this.tagRepo.create(name, createdBy);
   }
 
   public async deleteTag(id: number): Promise<boolean> {
-    return await this.tagRepo.delete(id);
+    return this.tagRepo.delete(id);
   }
 }

@@ -67,7 +67,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         />
         
         <div className="flex items-center gap-1 text-sm text-gray-500">
-          <svg xmlns="w3.org" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641l-.318 1.235c-.083.323.218.63.534.534l1.235-.318c.601-.154 1.194.154 1.641.586A11.455 11.455 0 0 0 12 20.25Z" />
           </svg>
           <span>{post.commentsCount} komentara</span>

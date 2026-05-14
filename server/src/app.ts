@@ -9,14 +9,14 @@ import { UserRepository }   from "./Database/repositories/users/UserRepository";
 import { EntityRepository } from "./Database/repositories/entity/EntityRepository";
 import { CommunityRepository } from "./Database/repositories/communities/CommunityRepository";
 import { TagRepository } from "./Database/repositories/Tag/TagRepository"; 
-import { PostRepository } from "./Database/repositories/Post/PostRepository"; 
+import { PostRepository } from "./Database/repositories/post/PostRepository"; 
 
 import { AuthService }   from "./Services/auth/AuthService";
 import { UserService }   from "./Services/users/UserService";
 import { EntityService } from "./Services/entity/EntityService";
 import { CommunityService } from "./Services/communities/CommunityService";
 import { TagService } from "./Services/Tag/TagServices"; 
-import { PostService } from "./Services/Post/PostServices"; 
+import { PostService } from "./Services/post/PostServices"; 
 
 import { AuthController }   from "./WebAPI/controllers/AuthController";
 import { UserController }   from "./WebAPI/controllers/UserController";
