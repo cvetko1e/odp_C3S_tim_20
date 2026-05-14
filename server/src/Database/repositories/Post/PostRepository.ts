@@ -1,6 +1,6 @@
 import { DbManager } from "../../connection/DbConnectionPool";
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
-import { IPostRepository } from "../../../Domain/repositories/post/IPostRepository";
+import { IPostRepository } from "../../../Domain/repositories/Post/IPostRepository";
 import { Post } from "../../../Domain/models/Post";
 import { Tag } from "../../../Domain/models/Tag";
 import type { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
