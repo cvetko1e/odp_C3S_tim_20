@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { postApi } from "../../api_services/posts/PostAPIService";
 import { LikeButton } from "../../components/posts/LikeButton";
+import { CommentList } from "../../components/comments/CommentList";
 import { useAuth } from "../../hooks/auth/useAuthHook";
 import type { Post } from "../../types/posts/Post";
 
@@ -73,7 +74,7 @@ export const PostDetailsPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="text-xs text-gray-500">
             Autor: <span className="font-semibold text-gray-700">@{post.authorUsername}</span>
-            {" "}•{" "}
+            {" "}.{" "}
             {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""}
           </div>
 
@@ -124,6 +125,11 @@ export const PostDetailsPage: React.FC = () => {
           />
         </div>
       </div>
-    </div>
+      
+          {user && (
+              <CommentList postId={postId} currentUserId={user.id} />
+          )}
+      </div>
+
   );
 };

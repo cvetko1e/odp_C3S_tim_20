@@ -4,4 +4,6 @@ export type UserDto = {
   email: string;
   role: string;
   isActive: number;
+  followersCount: number;
+  followingCount: number;
 };

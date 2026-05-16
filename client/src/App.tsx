@@ -1,10 +1,14 @@
 import { PostDetailsPage } from "./pages/posts/PostDetailsPage";
 import { CreatePostPage } from "./pages/posts/CreatePostPage";
 import { EditPostPage } from "./pages/posts/EditPostPage";
+import { UserProfilePage } from "./pages/user/UserProfilePage";
+import { FollowersPage } from "./pages/follow/FollowersPage";
+import { FollowingPage } from "./pages/follow/FollowingPage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/protected_route/ProtectedRoute";
 
+import LoginPage from "./pages/auth/LoginPage";
 import LoginPage    from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import NotFoundPage from "./pages/not_found/NotFoundPage";
@@ -33,7 +37,11 @@ export default function App() {
       {/* NOVE RUTE ZA OBJAVE (ZAŠTIĆENE ZA USER ULOGU) */}
       <Route path="/posts/:id" element={<ProtectedRoute requiredRole="user"><PostDetailsPage /></ProtectedRoute>} />
       <Route path="/communities/:communityId/posts/create" element={<ProtectedRoute requiredRole="user"><CreatePostPage /></ProtectedRoute>} />
-      <Route path="/posts/edit/:id" element={<ProtectedRoute requiredRole="user"><EditPostPage /></ProtectedRoute>} />
+          <Route path="/posts/edit/:id" element={<ProtectedRoute requiredRole="user"><EditPostPage /></ProtectedRoute>} />
+      {/* Profile & follow routes */}
+          <Route path="/users/:id" element={<ProtectedRoute requiredRole="user"><UserProfilePage /></ProtectedRoute>} />
+          <Route path="/users/:id/followers" element={<ProtectedRoute requiredRole="user"><FollowersPage /></ProtectedRoute>} />
+          <Route path="/users/:id/following" element={<ProtectedRoute requiredRole="user"><FollowingPage /></ProtectedRoute>} />
 
       {/* Admin routes */}
       <Route path="/admin"       element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
