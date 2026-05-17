@@ -17,7 +17,7 @@ export class FollowController {
     this.router.get("/users/search",         authenticate, this.search.bind(this));
   }
 
-  private parsePositiveInt(raw: string | undefined): number | null {
+  private parsePositiveInt(raw: string | string[] | undefined): number | null {
     if (typeof raw !== "string") return null;
     const parsed = Number.parseInt(raw, 10);
     if (!Number.isInteger(parsed) || parsed <= 0) return null;

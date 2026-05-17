@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { PageHeader, Empty, ErrorBox, SuccessBox, Spinner } from "../../components/ui/UI";
-import { useAuth } from "../../hooks/auth/useAuthHook";
 import axios from "axios";
 import { readItem } from "../../helpers/local_storage";
 
@@ -19,8 +18,6 @@ export default function AdminTagsPage() {
   const [success, setSuccess] = useState("");
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
-
-  const { user } = useAuth();
 
   const load = () =>
     axios.get<{ success: boolean; data?: Tag[] }>(BASE, { headers: authHeader() })

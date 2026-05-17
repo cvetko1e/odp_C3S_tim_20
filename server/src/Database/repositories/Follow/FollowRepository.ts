@@ -1,8 +1,9 @@
-import { RowDataPacket, ResultSetHeader } from "mysql2";
+import type { RowDataPacket, ResultSetHeader } from "mysql2/promise";
 import { DbManager } from "../../connection/DbConnectionPool";
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
 import { IFollowRepository } from "../../../Domain/repositories/Follow/IFollowRepository";
 import { UserDto } from "../../../Domain/DTOs/users/UserDto";
+import { UserRole } from "../../../Domain/enums/UserRole";
 
 type CountRow = RowDataPacket & { cnt: number };
 
@@ -11,7 +12,7 @@ type UserRow = RowDataPacket & {
   id: number;
   username: string;
   email: string;
-  role: string;
+  role: UserRole;
   isActive: number;
   followersCount: number;
   followingCount: number;
@@ -24,12 +25,12 @@ export class FollowRepository implements IFollowRepository {
   ) {}
 
   private mapUser(row: UserRow): UserDto {
-    // Adjust constructor args to match your existing UserDto
+    const role = row.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.USER;
     return new UserDto(
       row.id,
       row.username,
       row.email,
-      row.role,
+      role,
       row.isActive,
       row.followersCount,
       row.followingCount,

@@ -1,4 +1,4 @@
-import { RowDataPacket, ResultSetHeader } from "mysql2";
+import type { RowDataPacket, ResultSetHeader } from "mysql2/promise";
 import { IUserRepository } from "../../../Domain/repositories/users/IUserRepository";
 import { User } from "../../../Domain/models/User";
 import { UserRole } from "../../../Domain/enums/UserRole";
@@ -15,7 +15,7 @@ export class UserRepository implements IUserRepository {
     return new User(r.id, r.username, r.email, r.role as UserRole, r.passwordHash, r.isActive);
   }
 
-  async create(user: User): Promise<User> {
+  public async create(user: User): Promise<User> {
     const res = await this.db.getWriteConnection();
     if (!res) return new User();
     try {
@@ -31,7 +31,7 @@ export class UserRepository implements IUserRepository {
     } finally { res.conn.release(); }
   }
 
-  async findById(id: number): Promise<User> {
+  public async findById(id: number): Promise<User> {
     const res = await this.db.getReadConnection();
     if (!res) return new User();
     try {
@@ -43,7 +43,7 @@ export class UserRepository implements IUserRepository {
     } finally { res.conn.release(); }
   }
 
-  async findByUsername(username: string): Promise<User> {
+  public async findByUsername(username: string): Promise<User> {
     const res = await this.db.getReadConnection();
     if (!res) return new User();
     try {
@@ -55,7 +55,7 @@ export class UserRepository implements IUserRepository {
     } finally { res.conn.release(); }
   }
 
-  async findByEmail(email: string): Promise<User> {
+  public async findByEmail(email: string): Promise<User> {
     const res = await this.db.getReadConnection();
     if (!res) return new User();
     try {
@@ -67,7 +67,7 @@ export class UserRepository implements IUserRepository {
     } finally { res.conn.release(); }
   }
 
-  async findAll(): Promise<User[]> {
+  public async findAll(): Promise<User[]> {
     const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
@@ -79,7 +79,7 @@ export class UserRepository implements IUserRepository {
     } finally { res.conn.release(); }
   }
 
-  async update(user: User): Promise<boolean> {
+  public async update(user: User): Promise<boolean> {
     const res = await this.db.getWriteConnection();
     if (!res) return false;
     try {
@@ -94,7 +94,7 @@ export class UserRepository implements IUserRepository {
     } finally { res.conn.release(); }
   }
 
-  async deactivate(id: number): Promise<boolean> {
+  public async deactivate(id: number): Promise<boolean> {
     const res = await this.db.getWriteConnection();
     if (!res) return false;
     try {
@@ -108,16 +108,16 @@ export class UserRepository implements IUserRepository {
     } finally { res.conn.release(); }
   }
 
-    async changeRole(id: number, role: string): Promise<boolean> {
-        const res = await this.db.getWriteConnection();
+  public async changeRole(id: number, role: UserRole): Promise<boolean> {
+    const res = await this.db.getWriteConnection();
     if (!res) return false;
     try {
-        const [result] = await res.conn.execute<ResultSetHeader>(
-            `UPDATE users SET role = ? WHERE id = ?`, [role, id]
+      const [result] = await res.conn.execute<ResultSetHeader>(
+        `UPDATE users SET role = ? WHERE id = ?`, [role, id]
       );
-        return result.affectedRows > 0;
+      return result.affectedRows > 0;
     } catch (err) {
-        this.logger.error("UserRepository", "changeRole failed", err);
+      this.logger.error("UserRepository", "changeRole failed", err);
       return false;
     } finally { res.conn.release(); }
   }

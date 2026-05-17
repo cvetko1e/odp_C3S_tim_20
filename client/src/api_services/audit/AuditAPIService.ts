@@ -10,21 +10,16 @@ const authHeader = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const err = <T>(e: unknown, fallback: string): ApiResponse<T> => ({
-  success: false,
-  message: axios.isAxiosError(e)
-    ? (e.response?.data as { message?: string })?.message ?? fallback
-    : fallback,
-});
-
 export const auditApi: IAuditAPIService = {
-  async getLogs(page = 1, limit = 50) {
-    return axios
-      .get<ApiResponse<AuditLogDto[]>>(`${BASE}/logs`, {
+  async getLogs(page = 1, limit = 50): Promise<ApiResponse<AuditLogDto[]>> {
+    try {
+      const response = await axios.get<ApiResponse<AuditLogDto[]>>(`${BASE}/logs`, {
         headers: authHeader(),
         params: { page, limit },
-      })
-      .then((r) => r.data)
-      .catch((e) => err(e, "Failed to load audit logs"));
+      });
+      return response.data;
+    } catch {
+      return { success: false, message: "Failed to load audit logs" };
+    }
   },
 };

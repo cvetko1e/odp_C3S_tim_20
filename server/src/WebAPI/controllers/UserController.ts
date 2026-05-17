@@ -9,23 +9,23 @@ import { IAuditService } from "../../Domain/services/Audit/IAuditService";
 export class UserController {
   private readonly router = Router();
 
-    public constructor(
-        private readonly userService: IUserService,
-        private readonly auditService: IAuditService,
-    ) {
-        this.router.get("/users", authenticate, authorize(UserRole.ADMIN), this.getAll.bind(this));
-        this.router.get("/users/:id", authenticate, authorize(UserRole.ADMIN), this.getById.bind(this));
-        this.router.patch("/users/:id/deactivate", authenticate, authorize(UserRole.ADMIN), this.deactivate.bind(this));
-        this.router.put("/users/:id/role", authenticate, authorize(UserRole.ADMIN), this.changeRole.bind(this));
-
+  public constructor(
+    private readonly userService: IUserService,
+    private readonly auditService: IAuditService,
+  ) {
+    this.router.get("/users", authenticate, authorize(UserRole.ADMIN), this.getAll.bind(this));
+    this.router.get("/users/:id", authenticate, authorize(UserRole.ADMIN), this.getById.bind(this));
+    this.router.patch("/users/:id/deactivate", authenticate, authorize(UserRole.ADMIN), this.deactivate.bind(this));
+    this.router.put("/users/:id/role", authenticate, authorize(UserRole.ADMIN), this.changeRole.bind(this));
+  }
 
   private async getAll(req: Request, res: Response): Promise<void> {
-      try {
-          const users = await this.userService.getAll();
-          res.status(200).json({ success: true, data: users });
-      } catch {
-          res.status(500).json({ success: false, message: "Internal server error" });
-      }
+    try {
+      const users = await this.userService.getAll();
+      res.status(200).json({ success: true, data: users });
+    } catch {
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
 
   }
 
@@ -58,7 +58,7 @@ export class UserController {
             if (isNaN(id)) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
 
             const { role } = req.body as { role?: string };
-            if (!role || (role !== "user" && role !== "admin")) {
+            if (!role || (role !== UserRole.USER && role !== UserRole.ADMIN)) {
                 res.status(400).json({ success: false, message: "Role must be 'user' or 'admin'" });
                 return;
             }
