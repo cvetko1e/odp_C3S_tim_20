@@ -12,20 +12,27 @@ const authHeader = () => {
 
 const err = <T>(e: unknown, fallback: string): ApiResponse<T> => ({
   success: false,
-  message: axios.isAxiosError(e) ? (e.response?.data as { message?: string })?.message ?? fallback : fallback,
+    message: axios.isAxiosError(e)
+        ? (e.response?.data as { message?: string })?.message ?? fallback
+        : fallback,
+
 });
 
 export const usersApi: IUsersAPIService = {
   async getAll() {
     return axios.get<ApiResponse<UserDto[]>>(BASE, { headers: authHeader() })
-      .then(r => r.data).catch(e => err(e, "Failed to load users"));
+            .then((r) => r.data).catch((e) => err(e, "Failed to load users"));
   },
   async getById(id) {
     return axios.get<ApiResponse<UserDto>>(`${BASE}/${id}`, { headers: authHeader() })
-      .then(r => r.data).catch(e => err(e, "Failed to load user"));
+          .then((r) => r.data).catch((e) => err(e, "Failed to load user"));
   },
   async deactivate(id) {
     return axios.patch<ApiResponse<void>>(`${BASE}/${id}/deactivate`, {}, { headers: authHeader() })
-      .then(r => r.data).catch(e => err(e, "Failed to deactivate user"));
+            .then((r) => r.data).catch((e) => err(e, "Failed to deactivate user"));
+    },
+    async changeRole(id, role) {
+        return axios.put<ApiResponse<void>>(`${BASE}/${id}/role`, { role }, { headers: authHeader() })
+            .then((r) => r.data).catch((e) => err(e, "Failed to change role"));
   },
 };

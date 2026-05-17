@@ -12,6 +12,7 @@ import { TagRepository }       from "./Database/repositories/Tag/TagRepository";
 import { PostRepository }      from "./Database/repositories/Post/PostRepository";
 import { CommentRepository }   from "./Database/repositories/Comment/CommentRepository";
 import { FollowRepository }    from "./Database/repositories/Follow/FollowRepository";
+import { AuditRepository }     from "./Database/repositories/Audit/AuditRepository";
 
 import { AuthService }      from "./Services/auth/AuthService";
 import { UserService }      from "./Services/users/UserService";
@@ -21,6 +22,7 @@ import { TagService }       from "./Services/Tag/TagServices";
 import { PostService }      from "./Services/Post/PostServices";
 import { CommentService }   from "./Services/Comment/CommentService";
 import { FollowService }    from "./Services/Follow/FollowService";
+import { AuditService }     from "./Services/Audit/AuditService";
 
 import { AuthController }      from "./WebAPI/controllers/AuthController";
 import { UserController }      from "./WebAPI/controllers/UserController";
@@ -30,6 +32,7 @@ import { TagController }       from "./WebAPI/controllers/TagController";
 import { PostController }      from "./WebAPI/controllers/PostController";
 import { CommentController }   from "./WebAPI/controllers/CommentController";
 import { FollowController }    from "./WebAPI/controllers/FollowController";
+import { AuditController }     from "./WebAPI/controllers/AuditController";
 
 export const logger = new ConsoleLoggerService();
 export const db     = new DbManager(logger);
@@ -42,8 +45,10 @@ const tagRepo       = new TagRepository(db, logger);
 const postRepo      = new PostRepository(db, logger);
 const commentRepo   = new CommentRepository(db, logger);
 const followRepo    = new FollowRepository(db, logger);
+const auditRepo     = new AuditRepository(db, logger);
 
 // Services
+const auditService     = new AuditService(auditRepo);
 const authService      = new AuthService(userRepo);
 const userService      = new UserService(userRepo);
 const entityService    = new EntityService(entityRepo);
@@ -58,13 +63,14 @@ const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL ?? "*" }));
 app.use(express.json());
 
-app.use("/api/v1", new AuthController(authService).getRouter());
-app.use("/api/v1", new UserController(userService).getRouter());
+app.use("/api/v1", new AuthController(authService, auditService).getRouter());
+app.use("/api/v1", new UserController(userService, auditService).getRouter());
 app.use("/api/v1", new EntityController(entityService).getRouter());
-app.use("/api/v1", new CommunityController(communityService).getRouter());
+app.use("/api/v1", new CommunityController(communityService, auditService).getRouter());
 app.use("/api/v1", new TagController(tagService).getRouter());
-app.use("/api/v1", new PostController(postService).getRouter());
-app.use("/api/v1", new CommentController(commentService).getRouter());
-app.use("/api/v1", new FollowController(followService).getRouter());
+app.use("/api/v1", new PostController(postService, auditService).getRouter());
+app.use("/api/v1", new CommentController(commentService, auditService).getRouter());
+app.use("/api/v1", new FollowController(followService, auditService).getRouter());
+app.use("/api/v1", new AuditController(auditService).getRouter());
 
 export default app;

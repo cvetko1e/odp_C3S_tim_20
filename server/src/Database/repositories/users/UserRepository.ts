@@ -108,16 +108,16 @@ export class UserRepository implements IUserRepository {
     } finally { res.conn.release(); }
   }
 
-  async exists(id: number): Promise<boolean> {
-    const res = await this.db.getReadConnection();
+    async changeRole(id: number, role: string): Promise<boolean> {
+        const res = await this.db.getWriteConnection();
     if (!res) return false;
     try {
-      const [rows] = await res.conn.execute<RowDataPacket[]>(
-        `SELECT COUNT(*) as cnt FROM users WHERE id = ?`, [id]
+        const [result] = await res.conn.execute<ResultSetHeader>(
+            `UPDATE users SET role = ? WHERE id = ?`, [role, id]
       );
-      return (rows[0]?.cnt ?? 0) > 0;
+        return result.affectedRows > 0;
     } catch (err) {
-      this.logger.error("UserRepository", "exists failed", err);
+        this.logger.error("UserRepository", "changeRole failed", err);
       return false;
     } finally { res.conn.release(); }
   }
