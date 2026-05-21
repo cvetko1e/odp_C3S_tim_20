@@ -1,6 +1,8 @@
 import { Request, Response, Router } from "express";
 import jwt from "jsonwebtoken";
 import { IAuthService } from "../../Domain/services/auth/IAuthService";
+import { IAuditService } from "../../Domain/services/Audit/IAuditService";
+import { authenticate } from "../../Middlewares/authentification/AuthMiddleware";
 import { ValidationResult } from "../../Domain/types/ValidationResult";
 import { validateLogin } from "../validators/auth/validateLogin";
 import { validateRegister } from "../validators/auth/validateRegister";
@@ -8,9 +10,13 @@ import { validateRegister } from "../validators/auth/validateRegister";
 export class AuthController {
   private readonly router = Router();
 
-  public constructor(private readonly authService: IAuthService) {
-    this.router.post("/auth/login", this.login.bind(this));
+  public constructor(
+    private readonly authService: IAuthService,
+    private readonly auditService: IAuditService,
+  ) {
+    this.router.post("/auth/login",    this.login.bind(this));
     this.router.post("/auth/register", this.register.bind(this));
+    this.router.post("/auth/logout",   authenticate, this.logout.bind(this));
   }
 
   private async login(req: Request, res: Response): Promise<void> {
@@ -24,6 +30,7 @@ export class AuthController {
       process.env.JWT_SECRET ?? "",
       { expiresIn: "24h" }
     );
+    await this.auditService.log("LOGIN", result.id, "user", result.id, null, req.ip ?? null);
     res.status(200).json({ success: true, message: "Login successful", data: token });
   }
 
@@ -38,7 +45,13 @@ export class AuthController {
       process.env.JWT_SECRET ?? "",
       { expiresIn: "24h" }
     );
+    await this.auditService.log("REGISTER", result.id, "user", result.id, null, req.ip ?? null);
     res.status(201).json({ success: true, message: "Registration successful", data: token });
+  }
+
+  private async logout(req: Request, res: Response): Promise<void> {
+    await this.auditService.log("LOGOUT", req.user?.id ?? null, "user", req.user?.id ?? null, null, req.ip ?? null);
+    res.status(200).json({ success: true, message: "Logged out" });
   }
 
   public getRouter(): Router { return this.router; }
