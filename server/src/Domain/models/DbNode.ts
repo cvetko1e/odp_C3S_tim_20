@@ -1,14 +1,3 @@
-import { NodeStatus } from "../enums/NodeStatus";
-
-export class DbNode {
-  public status: NodeStatus    = NodeStatus.OFFLINE;
-  public lastCheck: Date       = new Date();
-  public successfulWrites: number = 0;
-  public failedWrites: number  = 0;
-
-  constructor(
-    public readonly name: string,
-    public readonly host: string,
-    public readonly port: number,
-  ) {}
-}
+// Re-export from the Database connection layer
+// (keeps backward-compatibility for anything that imports from Domain/models)
+export { DbNode } from "../../Database/connection/DbNode";

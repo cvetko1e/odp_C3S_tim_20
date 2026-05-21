@@ -72,6 +72,46 @@ services:
       timeout: 5s
       retries: 15
 
+  # ── SERVER (Node.js API) ───────────────────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: project_server
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      CLIENT_URL: http://localhost:5173
+      DB_MASTER_HOST: mysql-master
+      DB_MASTER_PORT: 3306
+      DB_MASTER_USER: root
+      DB_MASTER_PASSWORD: root1234
+      DB_MASTER_NAME: pulsenet
+      DB_SLAVE1_HOST: mysql-slave1
+      DB_SLAVE1_PORT: 3306
+      DB_SLAVE1_USER: root
+      DB_SLAVE1_PASSWORD: root1234
+      DB_SLAVE1_NAME: pulsenet
+      DB_SLAVE2_HOST: mysql-slave2
+      DB_SLAVE2_PORT: 3306
+      DB_SLAVE2_USER: root
+      DB_SLAVE2_PASSWORD: root1234
+      DB_SLAVE2_NAME: pulsenet
+      JWT_SECRET: project__is_a_great_one_i_guess
+      SALT_ROUNDS: 10
+      HEALTH_CHECK_INTERVAL: 10000
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+      mysql-slave1:
+        condition: service_healthy
+      mysql-slave2:
+        condition: service_healthy
+    networks:
+      - project_net
+
 volumes:
   master_data:
   slave1_data:

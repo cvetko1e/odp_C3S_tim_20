@@ -24,6 +24,7 @@ import { EntityController } from "./WebAPI/controllers/EntityController";
 import { CommunityController } from "./WebAPI/controllers/CommunityController";
 import { TagController } from "./WebAPI/controllers/TagController"; 
 import { PostController } from "./WebAPI/controllers/PostController"; 
+import { HealthController } from "./WebAPI/controllers/HealthController";
 
 export const logger = new ConsoleLoggerService();
 export const db     = new DbManager(logger);
@@ -48,6 +49,7 @@ const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL ?? "*" }));
 app.use(express.json());
 
+app.use("/api/v1", new HealthController(db, logger).getRouter());
 app.use("/api/v1", new AuthController(authService).getRouter());
 app.use("/api/v1", new UserController(userService).getRouter());
 app.use("/api/v1", new EntityController(entityService).getRouter());
