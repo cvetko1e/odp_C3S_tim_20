@@ -1,4 +1,5 @@
 import { NodeStatus } from "../../Domain/enums/NodeStatus";
+import { NodeHealthInfo } from "./HealthStatus";
 
 export type NodeRole = "master" | "slave";
 
@@ -17,7 +18,7 @@ export class DbNode {
   ) {}
 
   /** Serialise for the health API response */
-  public toJSON(): Record<string, unknown> {
+  public toJSON(): NodeHealthInfo {
     return {
       name:              this.name,
       role:              this.role,

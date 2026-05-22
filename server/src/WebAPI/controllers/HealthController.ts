@@ -24,51 +24,61 @@ export class HealthController {
 
   // ── GET /api/v1/health ────────────────────────────────────────
   private async getHealth(_req: Request, res: Response): Promise<void> {
-    const status = this.db.getHealthStatus();
-    const httpCode = status.status === "unhealthy" ? 503 : 200;
-    res.status(httpCode).json({
-      success: status.status !== "unhealthy",
-      data: {
-        status:    status.status,
-        timestamp: status.timestamp,
-        uptime:    status.uptime,
-      },
-    });
+    try {
+      const status = this.db.getHealthStatus();
+      const httpCode = status.status === "unhealthy" ? 503 : 200;
+      res.status(httpCode).json({
+        success: status.status !== "unhealthy",
+        data: {
+          status: status.status,
+          timestamp: status.timestamp,
+          uptime: status.uptime,
+        },
+      });
+    } catch {
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
   }
 
   // ── GET /api/v1/health/db ─────────────────────────────────────
   private async getDbHealth(_req: Request, res: Response): Promise<void> {
-    // Run a fresh health check before responding
-    await this.db.runHealthCheck();
-    const status = this.db.getHealthStatus();
-    res.status(200).json({
-      success: true,
-      data: status,
-    });
+    try {
+      await this.db.runHealthCheck();
+      const status = this.db.getHealthStatus();
+      res.status(200).json({
+        success: true,
+        data: status,
+      });
+    } catch {
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
   }
 
   // ── POST /api/v1/health/failover ──────────────────────────────
-  private async triggerFailover(_req: Request, res: Response): Promise<void> {
-    this.logger.warn("Health", `Manual failover triggered by admin user ${_req.user?.username ?? "unknown"}`);
-    const result = await this.db.promoteSlaveToMaster();
+  private async triggerFailover(req: Request, res: Response): Promise<void> {
+    try {
+      this.logger.warn("Health", `Manual failover triggered by admin user ${req.user?.username ?? "anonymous"}`);
+      const result = await this.db.promoteSlaveToMaster();
 
-    if (!result.success) {
-      res.status(503).json({ success: false, message: result.message });
-      return;
+      if (!result.success) {
+        res.status(503).json({ success: false, message: result.message });
+        return;
+      }
+
+      await this.db.runHealthCheck();
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+        data: {
+          promotedNode: result.promotedNode,
+          previousMaster: result.previousMaster,
+          currentStatus: this.db.getHealthStatus(),
+        },
+      });
+    } catch {
+      res.status(500).json({ success: false, message: "Internal server error" });
     }
-
-    // Run health check after failover to refresh statuses
-    await this.db.runHealthCheck();
-
-    res.status(200).json({
-      success: true,
-      message: result.message,
-      data: {
-        promotedNode:   result.promotedNode,
-        previousMaster: result.previousMaster,
-        currentStatus:  this.db.getHealthStatus(),
-      },
-    });
   }
 
   public getRouter(): Router { return this.router; }

@@ -46,8 +46,8 @@ const slave2Pool: Pool = mysql.createPool({
 interface NodeInfo { name: string; pool: Pool; node: DbNode; }
 
 export class DbManager {
-  private readonly master: NodeInfo;
-  private readonly slaves: NodeInfo[];
+  private master: NodeInfo;
+  private slaves: NodeInfo[];
   private slaveRrIndex: number = 0;
   private healthTimer: NodeJS.Timeout | null = null;
   private readonly startTime: Date = new Date();
@@ -172,7 +172,7 @@ export class DbManager {
   /** Returns structured health overview of all nodes */
   public getHealthStatus(): HealthStatus {
     const allNodes = [this.master, ...this.slaves];
-    const nodes: NodeHealthInfo[] = allNodes.map((n) => n.node.toJSON() as unknown as NodeHealthInfo);
+    const nodes: NodeHealthInfo[] = allNodes.map((n) => n.node.toJSON());
 
     const masterOk   = this.master.node.status === NodeStatus.HEALTHY;
     const slavesOk   = this.slaves.every((s) => s.node.status === NodeStatus.HEALTHY);
@@ -205,43 +205,32 @@ export class DbManager {
     promotedNode?: string;
     previousMaster?: string;
   }> {
-    // Find a healthy slave to promote
-    const candidate = this.slaves.find((s) => s.node.status !== NodeStatus.OFFLINE);
-    if (!candidate) {
+    const candidateIndex = this.slaves.findIndex((s) => s.node.status !== NodeStatus.OFFLINE);
+    if (candidateIndex === -1) {
       return { success: false, message: "No healthy slave available for promotion" };
     }
 
-    const previousMaster = this.master.name;
-    const previousMasterHost = this.master.node.host;
-    const previousMasterPort = this.master.node.port;
+    const oldMaster = this.master;
+    const promoted = this.slaves[candidateIndex];
 
-    // Swap: promoted slave becomes the master pool
-    const oldMasterPool = this.master.pool;
-    const oldMasterNode = this.master.node;
+    const previousMaster = oldMaster.name;
+    const previousMasterHost = oldMaster.node.host;
+    const previousMasterPort = oldMaster.node.port;
 
-    // Promote: copy slave's pool into master slot
-    this.master.pool = candidate.pool;
-    this.master.node.status = candidate.node.status;
-    this.master.node.responseTimeMs = candidate.node.responseTimeMs;
-    this.master.name = candidate.name;
-    // Update the node's role
-    candidate.node.role = "master";
+    promoted.node.role = "master";
+    oldMaster.node.role = "slave";
 
-    // Demote: old master becomes a slave in the candidate's slot
-    candidate.pool = oldMasterPool;
-    candidate.node.role = "slave";
-    candidate.node.status = oldMasterNode.status;
-    candidate.name = previousMaster;
+    this.master = promoted;
+    this.slaves[candidateIndex] = oldMaster;
 
-    this.logger.warn("DB", `FAILOVER: ${candidate.node.name} promoted to master, ${previousMaster} demoted to slave`);
+    this.logger.warn("DB", `FAILOVER: ${promoted.name} promoted to master, ${previousMaster} demoted to slave`);
 
-    // Log failover to audit_log
-    await this.logFailoverAudit(candidate.node.name, previousMaster, previousMasterHost, previousMasterPort);
+    await this.logFailoverAudit(promoted.name, previousMaster, previousMasterHost, previousMasterPort);
 
     return {
       success: true,
-      message: `Slave '${candidate.node.name}' promoted to master. Previous master '${previousMaster}' demoted.`,
-      promotedNode: candidate.node.name,
+      message: `Slave '${promoted.name}' promoted to master. Previous master '${previousMaster}' demoted.`,
+      promotedNode: promoted.name,
       previousMaster,
     };
   }
