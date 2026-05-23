@@ -20,8 +20,8 @@ export class UserRepository implements IUserRepository {
     if (!res) return new User();
     try {
       const [result] = await res.conn.execute<ResultSetHeader>(
-        `INSERT INTO users (username, email, role, passwordHash) VALUES (?, ?, ?, ?)`,
-        [user.username, user.email, user.role, user.passwordHash]
+        `INSERT INTO users (username, firstName, lastName, email, role, passwordHash) VALUES (?, ?, ?, ?, ?, ?)`,
+        [user.username, user.username, user.username, user.email, user.role, user.passwordHash]
       );
       if (result.insertId === 0) return new User();
       return new User(result.insertId, user.username, user.email, user.role, user.passwordHash);
