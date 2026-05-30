@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { communityApi } from "../../api_services/communities/CommunityAPIService";
 import { useAuth } from "../../hooks/auth/useAuthHook";
 import type { Community } from "../../types/communities/Community";
@@ -9,20 +10,29 @@ export default function CommunitiesPage() {
   const { token, isAuthenticated } = useAuth();
   const [items, setItems] = useState<Community[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const canJoin = useMemo(() => isAuthenticated && !!token, [isAuthenticated, token]);
 
-  const load = () => {
+  const fetchCommunities = async () => {
     communityApi.getPublicCommunities()
       .then((data) => {
         setItems(data);
         setError("");
       })
-      .catch(() => setError("Failed to load communities"));
+      .catch((err) => {
+        if (axios.isAxiosError<{ message?: string }>(err)) {
+          const message = err.response?.data?.message;
+          setError(typeof message === "string" ? message : "Failed to load communities.");
+          return;
+        }
+        setError("Failed to load communities.");
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    load();
+    fetchCommunities();
   }, []);
 
   const handleJoin = (id: number) => {
@@ -34,26 +44,32 @@ export default function CommunitiesPage() {
           return;
         }
         setError("");
-        load();
+        setLoading(true);
+        fetchCommunities();
       })
       .catch(() => setError("Join failed"));
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8">
-      <PageHeader eyebrow="Community" title="Public Communities" />
+    <main className="min-h-screen bg-[#080808] text-white">
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        <PageHeader eyebrow="Community" title="Communities" />
       {error && <ErrorBox message={error} />}
-      <div className="mt-4 grid gap-4">
-        {items.map((community) => (
-          <CommunityCard
-            key={community.id}
-            community={community}
-            onJoin={canJoin ? handleJoin : undefined}
-            showMembershipActions={canJoin}
-          />
-        ))}
+        {loading && !error && <p className="mt-4 text-sm text-white/70">Loading communities...</p>}
+        {!loading && !error && items.length === 0 && <Empty message="No communities found." />}
+        {!loading && items.length > 0 && (
+          <div className="mt-4 grid gap-4">
+            {items.map((community) => (
+              <CommunityCard
+                key={community.id}
+                community={community}
+                onJoin={canJoin ? handleJoin : undefined}
+                showMembershipActions={canJoin}
+              />
+            ))}
+          </div>
+        )}
       </div>
-      {items.length === 0 && !error && <Empty message="No public communities yet" />}
-    </div>
+    </main>
   );
 }

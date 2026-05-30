@@ -9,18 +9,18 @@ import type {
   SingleCommunityResponse,
 } from "../../types/communities/CommunityApiResponse";
 
-const API_URL = import.meta.env.VITE_API_URL + "communities";
+const BASE_API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1";
+const API_URL = `${BASE_API_URL.replace(/\/+$/, "")}/communities`;
 
 const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
 
 export const communityApi: ICommunityAPIService = {
   async getPublicCommunities(): Promise<Community[]> {
-    try {
-      const response = await axios.get<CommunityListResponse>(API_URL);
-      return response.data.success ? (response.data.data ?? []) : [];
-    } catch {
-      return [];
+    const response = await axios.get<CommunityListResponse>(API_URL);
+    if (!response.data.success) {
+      throw new Error(response.data.message ?? "Failed to load communities");
     }
+    return response.data.data ?? [];
   },
 
   async getMyCommunities(token: string): Promise<Community[]> {
