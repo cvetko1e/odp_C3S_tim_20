@@ -24,10 +24,10 @@ export class TagController {
     return this.router;
   }
 
-  private parsePositiveInt(raw: string | string[] | undefined): number | null {
-    if (typeof raw !== 'string') return null;
+  private parsePositiveInt(raw: string | string[] | undefined): number {
+    if (typeof raw !== 'string') return 0;
     const parsed = Number.parseInt(raw, 10);
-    if (!Number.isInteger(parsed) || parsed <= 0) return null;
+    if (!Number.isInteger(parsed) || parsed <= 0) return 0;
     return parsed;
   }
 
@@ -56,7 +56,7 @@ export class TagController {
       }
 
       const tag = await this.tagService.createTag(name.trim(), userId);
-      if (!tag) {
+      if (tag.id === 0) {
         res.status(500).json({ success: false, message: 'Failed to create tag' });
         return;
       }
@@ -70,7 +70,7 @@ export class TagController {
   public delete = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = this.parsePositiveInt(req.params.id);
-      if (id === null) {
+      if (id === 0) {
         res.status(400).json({ success: false, message: 'Invalid tag id' });
         return;
       }
@@ -87,3 +87,4 @@ export class TagController {
     }
   };
 }
+

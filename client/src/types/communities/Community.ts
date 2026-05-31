@@ -15,3 +15,17 @@ export type Community = {
   memberRole?: CommunityMemberRole | null;
   memberStatus?: CommunityMemberStatus | null;
 };
+
+export const emptyCommunity: Community = {
+  id: 0,
+  name: "",
+  description: null,
+  rules: null,
+  avatarUrl: null,
+  type: "public",
+  createdBy: 0,
+  createdAt: null,
+  updatedAt: null,
+  memberRole: null,
+  memberStatus: null,
+};

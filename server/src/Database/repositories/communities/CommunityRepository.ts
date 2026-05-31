@@ -85,9 +85,9 @@ export class CommunityRepository implements ICommunityRepository {
     }
   }
 
-  public async getById(id: number): Promise<CommunityDto | null> {
+  public async getById(id: number): Promise<CommunityDto> {
     const res = await this.db.getReadConnection();
-    if (!res) return null;
+    if (!res) return new CommunityDto();
     try {
       const [rows] = await res.conn.execute<CommunityRow[]>(
         `SELECT id, name, description, rules, avatarUrl, type, createdBy, createdAt, updatedAt
@@ -95,10 +95,10 @@ export class CommunityRepository implements ICommunityRepository {
          WHERE id = ?`,
         [id],
       );
-      return rows.length > 0 ? this.map(rows[0]) : null;
+      return rows.length > 0 ? this.map(rows[0]) : new CommunityDto();
     } catch (err) {
       this.logger.error("CommunityRepository", "getById failed", err);
-      return null;
+      return new CommunityDto();
     } finally {
       res.conn.release();
     }
@@ -126,9 +126,9 @@ export class CommunityRepository implements ICommunityRepository {
     }
   }
 
-  public async create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto | null> {
+  public async create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto> {
     const res = await this.db.getWriteConnection();
-    if (!res) return null;
+    if (!res) return new CommunityDto();
     try {
       await res.conn.beginTransaction();
       const [communityResult] = await res.conn.execute<ResultSetHeader>(
@@ -139,7 +139,7 @@ export class CommunityRepository implements ICommunityRepository {
 
       if (communityResult.insertId === 0) {
         await res.conn.rollback();
-        return null;
+        return new CommunityDto();
       }
 
       const [memberResult] = await res.conn.execute<ResultSetHeader>(
@@ -150,7 +150,7 @@ export class CommunityRepository implements ICommunityRepository {
 
       if (memberResult.affectedRows === 0) {
         await res.conn.rollback();
-        return null;
+        return new CommunityDto();
       }
 
       await res.conn.commit();
@@ -162,11 +162,11 @@ export class CommunityRepository implements ICommunityRepository {
         [communityResult.insertId],
       );
 
-      return rows.length > 0 ? this.map(rows[0]) : null;
+      return rows.length > 0 ? this.map(rows[0]) : new CommunityDto();
     } catch (err) {
       await res.conn.rollback();
       this.logger.error("CommunityRepository", "create failed", err);
-      return null;
+      return new CommunityDto();
     } finally {
       res.conn.release();
     }
@@ -300,18 +300,18 @@ export class CommunityRepository implements ICommunityRepository {
     }
   }
 
-  public async getCommunityType(communityId: number): Promise<CommunityType | null> {
+  public async getCommunityType(communityId: number): Promise<CommunityType | ""> {
     const res = await this.db.getReadConnection();
-    if (!res) return null;
+    if (!res) return "";
     try {
       const [rows] = await res.conn.execute<CommunityTypeRow[]>(
         `SELECT type FROM communities WHERE id = ?`,
         [communityId],
       );
-      return rows.length > 0 ? rows[0].type : null;
+      return rows.length > 0 ? rows[0].type : "";
     } catch (err) {
       this.logger.error("CommunityRepository", "getCommunityType failed", err);
-      return null;
+      return "";
     } finally {
       res.conn.release();
     }

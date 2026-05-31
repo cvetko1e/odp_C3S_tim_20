@@ -13,7 +13,7 @@ export class EntityService implements IEntityService {
     return new PaginatedListDto(items, items.length, page, limit);
   }
 
-  async getById(id: number): Promise<EntityDto | null> {
+  async getById(id: number): Promise<EntityDto> {
     return this.entityRepo.findById(id);
   }
 
@@ -21,9 +21,9 @@ export class EntityService implements IEntityService {
     return this.entityRepo.findByUserId(userId);
   }
 
-  async create(dto: CreateEntityDto): Promise<EntityDto | null> {
+  async create(dto: CreateEntityDto): Promise<EntityDto> {
     const created = await this.entityRepo.create(dto);
-    if (created.id === 0) return null;
+    if (created.id === 0) return new EntityDto();
     return new EntityDto(created.id, created.userId, created.status, created.createdAt);
   }
 

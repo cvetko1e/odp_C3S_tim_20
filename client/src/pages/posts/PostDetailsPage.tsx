@@ -4,14 +4,14 @@ import { postApi } from "../../api_services/posts/PostAPIService";
 import { LikeButton } from "../../components/posts/LikeButton";
 import { CommentList } from "../../components/comments/CommentList";
 import { useAuth } from "../../hooks/auth/useAuthHook";
-import type { Post } from "../../types/posts/Post";
+import { emptyPost, type Post } from "../../types/posts/Post";
 
 export const PostDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { token, user } = useAuth();
 
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<Post>(emptyPost);
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -28,25 +28,25 @@ export const PostDetailsPage: React.FC = () => {
   }, [postId, token]);
 
   const handleLikeToggle = async () => {
-    if (!post || !token) return;
+    if (post.id === 0 || !token) return;
 
     if (isLiked) {
       const success = await postApi.unlikePost(token, post.id);
       if (success) {
         setIsLiked(false);
-        setPost((prev) => (prev ? { ...prev, likesCount: prev.likesCount - 1 } : null));
+        setPost((prev) => ({ ...prev, likesCount: prev.likesCount - 1 }));
       }
     } else {
       const success = await postApi.likePost(token, post.id);
       if (success) {
         setIsLiked(true);
-        setPost((prev) => (prev ? { ...prev, likesCount: prev.likesCount + 1 } : null));
+        setPost((prev) => ({ ...prev, likesCount: prev.likesCount + 1 }));
       }
     }
   };
 
   const handleDelete = async () => {
-    if (!post || !token) return;
+    if (post.id === 0 || !token) return;
     if (window.confirm("Da li ste sigurni da zelite da obrisete ovu objavu?")) {
       const success = await postApi.deletePost(token, post.id);
       if (success) {
@@ -56,7 +56,7 @@ export const PostDetailsPage: React.FC = () => {
   };
 
   if (loading) return <div className="text-center py-10">Ucitavanje objave...</div>;
-  if (!post) return <div className="text-center py-10 text-red-500">Objava nije pronadjena.</div>;
+  if (post.id === 0) return <div className="text-center py-10 text-red-500">Objava nije pronadjena.</div>;
 
   const isAuthor = user?.id === post.authorId;
   const canManage = isAuthor || user?.role === "admin";

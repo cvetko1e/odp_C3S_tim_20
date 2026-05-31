@@ -1,18 +1,18 @@
 import axios from "axios";
 import type { IPostAPIService } from "./IPostAPIService";
-import type { Post } from "../../types/posts/Post";
+import { emptyPost, type Post } from "../../types/posts/Post";
 import type { PostListResponse, SinglePostResponse, PostActionResponse } from "../../types/posts/PostApiResponses";
 
 const API_URL = import.meta.env.VITE_API_URL + "posts";
 const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
 
 export const postApi: IPostAPIService = {
-  async getPostById(id: number, token: string): Promise<Post | null> {
+  async getPostById(id: number, token: string): Promise<Post> {
     try {
       const response = await axios.get<SinglePostResponse>(`${API_URL}/${id}`, { headers: authHeader(token) });
-      return response.data.success ? (response.data.data ?? null) : null;
+      return response.data.success ? (response.data.data ?? emptyPost) : emptyPost;
     } catch {
-      return null;
+      return emptyPost;
     }
   },
 
@@ -34,13 +34,13 @@ export const postApi: IPostAPIService = {
     }
   },
 
-  async createPost(token: string, title: string, content: string, imageUrl: string | null, communityId: number, tagIds: number[]): Promise<Post | null> {
+  async createPost(token: string, title: string, content: string, imageUrl: string | null, communityId: number, tagIds: number[]): Promise<Post> {
     try {
       const payload = { title, content, imageUrl, communityId, tagIds };
       const response = await axios.post<SinglePostResponse>(API_URL, payload, { headers: authHeader(token) });
-      return response.data.success ? (response.data.data ?? null) : null;
+      return response.data.success ? (response.data.data ?? emptyPost) : emptyPost;
     } catch {
-      return null;
+      return emptyPost;
     }
   },
 

@@ -7,12 +7,12 @@ import type { JwtTokenClaims } from "../../types/auth/JwtTokenClaims";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const KEY = "authToken";
 
-const decode = (token: string): JwtTokenClaims | null => {
+const decode = (token: string): JwtTokenClaims => {
   try {
     const d = jwtDecode<JwtTokenClaims>(token);
-    return d?.id ? d : null;
+    return d?.id ? d : { id: 0, username: "", role: "user", exp: 0 };
   } catch {
-    return null;
+    return { id: 0, username: "", role: "user", exp: 0 };
   }
 };
 
@@ -30,7 +30,7 @@ const getInitialAuth = () => {
 
   if (saved && !expired(saved)) {
     const claims = decode(saved);
-    if (claims) {
+    if (claims.id !== 0) {
       return {
         token: saved,
         user: { id: claims.id, username: claims.username, role: claims.role, } as AuthUser,
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = (t: string) => {
     const claims = decode(t);
-    if (!claims || expired(t)) return;
+    if (claims.id === 0 || expired(t)) return;
 
     setToken(t);
     setUser({ id: claims.id, username: claims.username, role: claims.role });

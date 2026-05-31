@@ -6,14 +6,14 @@ import { UpdateCommunityDto } from "../../DTOs/communities/UpdateCommunityDto";
 export interface ICommunityRepository {
   getPublic(): Promise<CommunityDto[]>;
   getAll(): Promise<CommunityDto[]>;
-  getById(id: number): Promise<CommunityDto | null>;
+  getById(id: number): Promise<CommunityDto>;
   getByUserId(userId: number): Promise<CommunityDto[]>;
-  create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto | null>;
+  create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto>;
   update(id: number, dto: UpdateCommunityDto): Promise<boolean>;
   delete(id: number): Promise<boolean>;
   isMember(communityId: number, userId: number): Promise<boolean>;
   isModerator(communityId: number, userId: number): Promise<boolean>;
   joinCommunity(communityId: number, userId: number): Promise<boolean>;
   leaveCommunity(communityId: number, userId: number): Promise<boolean>;
-  getCommunityType(communityId: number): Promise<CommunityType | null>;
+  getCommunityType(communityId: number): Promise<CommunityType | "">;
 }

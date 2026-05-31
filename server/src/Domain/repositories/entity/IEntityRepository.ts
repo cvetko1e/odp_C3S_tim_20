@@ -4,7 +4,7 @@ import { EntityDto } from "../../DTOs/entity/EntityDto";
 import { CreateEntityDto } from "../../DTOs/entity/CreateEntityDto";
 
 export interface IEntityRepository {
-  findById(id: number): Promise<EntityDto | null>;
+  findById(id: number): Promise<EntityDto>;
   findAll(page?: number, limit?: number): Promise<EntityDto[]>;
   findByUserId(userId: number): Promise<EntityDto[]>;
   create(dto: CreateEntityDto): Promise<Entity>;

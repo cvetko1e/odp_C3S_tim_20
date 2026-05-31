@@ -26,15 +26,15 @@ export class CommunityController {
     this.router.delete("/communities/:id/leave", authenticate, this.leave.bind(this));
   }
 
-  private parseId(rawId: string): number | null {
+  private parseId(rawId: string): number {
     const id = Number.parseInt(rawId, 10);
-    return Number.isNaN(id) ? null : id;
+    return Number.isNaN(id) ? 0 : id;
   }
 
-  private getSingleParam(value: string | string[] | undefined): string | null {
+  private getSingleParam(value: string | string[] | undefined): string {
     if (typeof value === "string") return value;
     if (Array.isArray(value) && value.length > 0) return value[0];
-    return null;
+    return "";
   }
 
   private async getPublic(req: Request, res: Response): Promise<void> {
@@ -80,7 +80,7 @@ export class CommunityController {
       if (!validation.valid) { res.status(400).json({ success: false, message: validation.message ?? "Invalid input" }); return; }
 
       const created = await this.communityService.create(dto, req.user.id);
-      if (!created) { res.status(500).json({ success: false, message: "Failed to create community" }); return; }
+      if (created.id === 0) { res.status(500).json({ success: false, message: "Failed to create community" }); return; }
 
       await this.auditService.log('CREATE_COMMUNITY', req.user.id, 'community', created.id, null, req.ip ?? null);
 
@@ -93,9 +93,9 @@ export class CommunityController {
       const rawId = this.getSingleParam(req.params.id);
       if (!rawId) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const id = this.parseId(rawId);
-      if (id === null) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
+      if (id === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const community = await this.communityService.getById(id);
-      if (!community) { res.status(404).json({ success: false, message: "Community not found" }); return; }
+      if (community.id === 0) { res.status(404).json({ success: false, message: "Community not found" }); return; }
       res.status(200).json({ success: true, data: community });
     } catch { res.status(500).json({ success: false, message: "Internal server error" }); }
   }
@@ -106,9 +106,9 @@ export class CommunityController {
       const rawId = this.getSingleParam(req.params.id);
       if (!rawId) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const id = this.parseId(rawId);
-      if (id === null) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
+      if (id === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const community = await this.communityService.getById(id);
-      if (!community) { res.status(404).json({ success: false, message: "Community not found" }); return; }
+      if (community.id === 0) { res.status(404).json({ success: false, message: "Community not found" }); return; }
 
       const dto = new UpdateCommunityDto(
         typeof req.body.name        === "string" ? req.body.name.trim() : undefined,
@@ -133,9 +133,9 @@ export class CommunityController {
       const rawId = this.getSingleParam(req.params.id);
       if (!rawId) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const id = this.parseId(rawId);
-      if (id === null) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
+      if (id === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const community = await this.communityService.getById(id);
-      if (!community) { res.status(404).json({ success: false, message: "Community not found" }); return; }
+      if (community.id === 0) { res.status(404).json({ success: false, message: "Community not found" }); return; }
       const deleted = await this.communityService.delete(id, req.user.id, req.user.role);
       if (!deleted) { res.status(409).json({ success: false, message: "Operation not allowed" }); return; }
       res.status(200).json({ success: true, message: "Community deleted" });
@@ -148,9 +148,9 @@ export class CommunityController {
       const rawId = this.getSingleParam(req.params.id);
       if (!rawId) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const id = this.parseId(rawId);
-      if (id === null) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
+      if (id === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const community = await this.communityService.getById(id);
-      if (!community) { res.status(404).json({ success: false, message: "Community not found" }); return; }
+      if (community.id === 0) { res.status(404).json({ success: false, message: "Community not found" }); return; }
       const joined = await this.communityService.join(id, req.user.id);
       if (!joined) { res.status(409).json({ success: false, message: "Already member or operation not allowed" }); return; }
 
@@ -166,9 +166,9 @@ export class CommunityController {
       const rawId = this.getSingleParam(req.params.id);
       if (!rawId) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const id = this.parseId(rawId);
-      if (id === null) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
+      if (id === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const community = await this.communityService.getById(id);
-      if (!community) { res.status(404).json({ success: false, message: "Community not found" }); return; }
+      if (community.id === 0) { res.status(404).json({ success: false, message: "Community not found" }); return; }
       const left = await this.communityService.leave(id, req.user.id);
       if (!left) { res.status(409).json({ success: false, message: "Operation not allowed" }); return; }
       res.status(200).json({ success: true, message: "Left community" });

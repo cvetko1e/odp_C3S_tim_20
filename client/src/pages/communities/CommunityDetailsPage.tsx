@@ -2,39 +2,43 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { communityApi } from "../../api_services/communities/CommunityAPIService";
 import { useAuth } from "../../hooks/auth/useAuthHook";
-import type { Community } from "../../types/communities/Community";
+import { emptyCommunity, type Community } from "../../types/communities/Community";
 import { ErrorBox, PageHeader } from "../../components/ui/UI";
 
 export default function CommunityDetailsPage() {
   const params = useParams<{ id: string }>();
   const { token } = useAuth();
-  const [community, setCommunity] = useState<Community | null>(null);
+  const [community, setCommunity] = useState<Community>(emptyCommunity);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const id = useMemo(() => {
-    if (!params.id) return null;
+    if (!params.id) return 0;
     const parsed = Number.parseInt(params.id, 10);
-    return Number.isNaN(parsed) ? null : parsed;
+    return Number.isNaN(parsed) ? 0 : parsed;
   }, [params.id]);
 
   useEffect(() => {
-    if (id === null) return;
+    if (id === 0) return;
 
     let mounted = true;
     const fetchCommunity = async () => {
       try {
         const item = await communityApi.getCommunityById(id, token ?? undefined);
         if (!mounted) return;
-        if (!item) {
-          setCommunity(null);
+        if (item.id === 0) {
+          setCommunity(emptyCommunity);
           setError("Community not found");
+          setLoading(false);
           return;
         }
         setCommunity(item);
         setError("");
+        setLoading(false);
       } catch {
         if (!mounted) return;
         setError("Failed to load community");
+        setLoading(false);
       }
     };
 
@@ -45,7 +49,7 @@ export default function CommunityDetailsPage() {
   }, [id, token]);
 
   const handleJoin = () => {
-    if (!token || id === null) return;
+    if (!token || id === 0) return;
     communityApi.joinCommunity(token, id)
       .then((ok) => {
         if (!ok) {
@@ -53,8 +57,8 @@ export default function CommunityDetailsPage() {
           return;
         }
         return communityApi.getCommunityById(id, token).then((item) => {
-          if (!item) {
-            setCommunity(null);
+          if (item.id === 0) {
+            setCommunity(emptyCommunity);
             setError("Community not found");
             return;
           }
@@ -66,7 +70,7 @@ export default function CommunityDetailsPage() {
   };
 
   const handleLeave = () => {
-    if (!token || id === null) return;
+    if (!token || id === 0) return;
     communityApi.leaveCommunity(token, id)
       .then((ok) => {
         if (!ok) {
@@ -74,8 +78,8 @@ export default function CommunityDetailsPage() {
           return;
         }
         return communityApi.getCommunityById(id, token).then((item) => {
-          if (!item) {
-            setCommunity(null);
+          if (item.id === 0) {
+            setCommunity(emptyCommunity);
             setError("Community not found");
             return;
           }
@@ -88,11 +92,13 @@ export default function CommunityDetailsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Community" title={community?.name ?? "Community Details"} />
-      {id === null && <ErrorBox message="Invalid community id" />}
-      {id !== null && error && <ErrorBox message={error} />}
+      <PageHeader eyebrow="Community" title={community.name || "Community Details"} />
+      {id === 0 && <ErrorBox message="Invalid community id" />}
+      {id !== 0 && error && <ErrorBox message={error} />}
+      {id !== 0 && loading && <p className="mt-4 text-sm text-white/70">Loading...</p>}
+      {id !== 0 && !loading && !error && community.id === 0 && <p className="mt-4 text-sm text-white/70">Community not found.</p>}
 
-      {community && (
+      {community.id !== 0 && (
         <div className="bg-white/2 border border-white/8 rounded-2xl p-5 space-y-3">
           <p className="text-white/70 text-sm">{community.description ?? "No description"}</p>
           <p className="text-white/40 text-sm"><span className="text-white/60">Rules:</span> {community.rules ?? "No rules"}</p>

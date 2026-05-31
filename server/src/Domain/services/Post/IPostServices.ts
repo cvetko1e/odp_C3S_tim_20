@@ -2,7 +2,7 @@ import { Post } from '../../models/Post';
 import { ServiceResult } from '../../types/ServiceResult';
 
 export interface IPostService {
-  getPostById(id: number): Promise<Post | null>;
+  getPostById(id: number): Promise<Post>;
   getPostsByCommunity(communityId: number): Promise<Post[]>;
   getHomeFeed(userId: number): Promise<Post[]>;
   createPost(

@@ -18,15 +18,15 @@ export class EntityRepository implements IEntityRepository {
     return new EntityDto(r.id, r.userId, r.status as EntityStatus, new Date(r.createdAt));
   }
 
-  async findById(id: number): Promise<EntityDto | null> {
+  async findById(id: number): Promise<EntityDto> {
     const res = await this.db.getReadConnection();
-    if (!res) return null;
+    if (!res) return new EntityDto();
     try {
       const [rows] = await res.conn.execute<RowDataPacket[]>(`SELECT * FROM entities WHERE id = ?`, [id]);
-      return rows.length > 0 ? this.map(rows[0]) : null;
+      return rows.length > 0 ? this.map(rows[0]) : new EntityDto();
     } catch (err) {
       this.logger.error("EntityRepository", "findById failed", err);
-      return null;
+      return new EntityDto();
     } finally { res.conn.release(); }
   }
 

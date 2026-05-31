@@ -19,7 +19,7 @@ export default function CreateCommunityPage() {
 
     communityApi.createCommunity(token, dto)
       .then((created) => {
-        if (!created) {
+        if (created.id === 0) {
           setError("Failed to create community");
           return;
         }

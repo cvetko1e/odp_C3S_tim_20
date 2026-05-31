@@ -42,7 +42,7 @@ export class CommentRepository implements ICommentRepository {
     );
   }
 
-  private async findByIdWithConnection(id: number, conn: PoolConnection): Promise<CommentDto | null> {
+  private async findByIdWithConnection(id: number, conn: PoolConnection): Promise<CommentDto> {
     const [rows] = await conn.execute<CommentRow[]>(
       `SELECT c.id, c.postId, c.authorId, c.parentId,
               CASE WHEN c.isDeleted = 1 THEN '[comment deleted]' ELSE c.content END AS content,
@@ -56,7 +56,7 @@ export class CommentRepository implements ICommentRepository {
     );
 
     if (rows.length === 0) {
-      return null;
+      return new CommentDto();
     }
 
     return this.mapRow(rows[0]);
@@ -113,26 +113,26 @@ export class CommentRepository implements ICommentRepository {
     }
   }
 
-  public async findById(id: number): Promise<CommentDto | null> {
+  public async findById(id: number): Promise<CommentDto> {
     const read = await this.db.getReadConnection();
     if (!read) {
-      return null;
+      return new CommentDto();
     }
 
     try {
       return await this.findByIdWithConnection(id, read.conn);
     } catch (error) {
       this.logger.error("CommentRepository", "findById failed", error);
-      return null;
+      return new CommentDto();
     } finally {
       read.conn.release();
     }
   }
 
-  public async create(postId: number, authorId: number, content: string, parentId: number | null): Promise<CommentDto | null> {
+  public async create(postId: number, authorId: number, content: string, parentId: number | null): Promise<CommentDto> {
     const write = await this.db.getWriteConnection();
     if (!write) {
-      return null;
+      return new CommentDto();
     }
 
     try {
@@ -143,13 +143,13 @@ export class CommentRepository implements ICommentRepository {
       );
 
       if (result.insertId <= 0) {
-        return null;
+        return new CommentDto();
       }
 
       return await this.findByIdWithConnection(result.insertId, write.conn);
     } catch (error) {
       this.logger.error("CommentRepository", "create failed", error);
-      return null;
+      return new CommentDto();
     } finally {
       write.conn.release();
     }

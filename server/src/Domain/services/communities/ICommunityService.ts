@@ -6,9 +6,9 @@ import { UpdateCommunityDto } from "../../DTOs/communities/UpdateCommunityDto";
 export interface ICommunityService {
   getPublic(): Promise<CommunityDto[]>;
   getAll(): Promise<CommunityDto[]>;
-  getById(id: number): Promise<CommunityDto | null>;
+  getById(id: number): Promise<CommunityDto>;
   getMine(userId: number): Promise<CommunityDto[]>;
-  create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto | null>;
+  create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto>;
   update(id: number, dto: UpdateCommunityDto, userId: number, userRole: UserRole): Promise<boolean>;
   delete(id: number, userId: number, userRole: UserRole): Promise<boolean>;
   join(id: number, userId: number): Promise<boolean>;

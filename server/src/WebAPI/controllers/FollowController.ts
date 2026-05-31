@@ -17,10 +17,10 @@ export class FollowController {
     this.router.get("/users/search",         authenticate, this.search.bind(this));
   }
 
-  private parsePositiveInt(raw: string | string[] | undefined): number | null {
-    if (typeof raw !== "string") return null;
+  private parsePositiveInt(raw: string | string[] | undefined): number {
+    if (typeof raw !== "string") return 0;
     const parsed = Number.parseInt(raw, 10);
-    if (!Number.isInteger(parsed) || parsed <= 0) return null;
+    if (!Number.isInteger(parsed) || parsed <= 0) return 0;
     return parsed;
   }
 
@@ -29,7 +29,7 @@ export class FollowController {
       const followerId = req.user?.id;
       if (!followerId) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
       const followingId = this.parsePositiveInt(req.params.id);
-      if (followingId === null) { res.status(400).json({ success: false, message: "Invalid user id" }); return; }
+      if (followingId === 0) { res.status(400).json({ success: false, message: "Invalid user id" }); return; }
 
       const result = await this.followService.follow(followerId, followingId);
 
@@ -46,7 +46,7 @@ export class FollowController {
       const followerId = req.user?.id;
       if (!followerId) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
       const followingId = this.parsePositiveInt(req.params.id);
-      if (followingId === null) { res.status(400).json({ success: false, message: "Invalid user id" }); return; }
+      if (followingId === 0) { res.status(400).json({ success: false, message: "Invalid user id" }); return; }
       const result = await this.followService.unfollow(followerId, followingId);
       res.status(result.status).json({ success: result.success, message: result.message });
     } catch { res.status(500).json({ success: false, message: "Internal server error" }); }
@@ -55,7 +55,7 @@ export class FollowController {
   private async getFollowers(req: Request, res: Response): Promise<void> {
     try {
       const userId = this.parsePositiveInt(req.params.id);
-      if (userId === null) { res.status(400).json({ success: false, message: "Invalid user id" }); return; }
+      if (userId === 0) { res.status(400).json({ success: false, message: "Invalid user id" }); return; }
       const followers = await this.followService.getFollowers(userId);
       res.status(200).json({ success: true, data: followers });
     } catch { res.status(500).json({ success: false, message: "Internal server error" }); }
@@ -64,7 +64,7 @@ export class FollowController {
   private async getFollowing(req: Request, res: Response): Promise<void> {
     try {
       const userId = this.parsePositiveInt(req.params.id);
-      if (userId === null) { res.status(400).json({ success: false, message: "Invalid user id" }); return; }
+      if (userId === 0) { res.status(400).json({ success: false, message: "Invalid user id" }); return; }
       const following = await this.followService.getFollowing(userId);
       res.status(200).json({ success: true, data: following });
     } catch { res.status(500).json({ success: false, message: "Internal server error" }); }

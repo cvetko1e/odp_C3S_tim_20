@@ -18,7 +18,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
 
-  if (targetUserId === currentUserId) return null;
+  if (targetUserId === currentUserId) return <></>;
 
   const handleClick = async () => {
     setLoading(true);

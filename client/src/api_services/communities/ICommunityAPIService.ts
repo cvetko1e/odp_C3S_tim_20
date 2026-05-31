@@ -6,8 +6,8 @@ export interface ICommunityAPIService {
   getPublicCommunities(): Promise<Community[]>;
   getMyCommunities(token: string): Promise<Community[]>;
   getAllCommunities(token: string): Promise<Community[]>;
-  getCommunityById(id: number, token?: string): Promise<Community | null>;
-  createCommunity(token: string, dto: CreateCommunityDto): Promise<Community | null>;
+  getCommunityById(id: number, token?: string): Promise<Community>;
+  createCommunity(token: string, dto: CreateCommunityDto): Promise<Community>;
   updateCommunity(token: string, id: number, dto: UpdateCommunityDto): Promise<boolean>;
   deleteCommunity(token: string, id: number): Promise<boolean>;
   joinCommunity(token: string, id: number): Promise<boolean>;

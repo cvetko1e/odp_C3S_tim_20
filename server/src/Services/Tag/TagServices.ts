@@ -9,9 +9,9 @@ export class TagService implements ITagService {
     return this.tagRepo.findAll();
   }
 
-  public async createTag(name: string, createdBy: number): Promise<Tag | null> {
+  public async createTag(name: string, createdBy: number): Promise<Tag> {
     const existing = await this.tagRepo.findByName(name);
-    if (existing) return existing;
+    if (existing.id !== 0) return existing;
     return this.tagRepo.create(name, createdBy);
   }
 
@@ -19,3 +19,4 @@ export class TagService implements ITagService {
     return this.tagRepo.delete(id);
   }
 }
+

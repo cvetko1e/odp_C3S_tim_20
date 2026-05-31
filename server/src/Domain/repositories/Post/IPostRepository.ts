@@ -1,10 +1,10 @@
 import { Post } from '../../models/Post';
 
 export interface IPostRepository {
-  findById(id: number): Promise<Post | null>;
+  findById(id: number): Promise<Post>;
   findByCommunityId(communityId: number): Promise<Post[]>;
   getFeed(userId: number): Promise<Post[]>;
-  create(post: Post): Promise<number | null>;
+  create(post: Post): Promise<number>;
   update(post: Post): Promise<boolean>;
   delete(id: number): Promise<boolean>;
 

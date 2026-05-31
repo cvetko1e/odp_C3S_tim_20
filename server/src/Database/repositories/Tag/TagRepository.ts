@@ -33,37 +33,37 @@ export class TagRepository implements ITagRepository {
     }
   }
 
-  public async findById(id: number): Promise<Tag | null> {
+  public async findById(id: number): Promise<Tag> {
     const res = await this.db.getReadConnection();
-    if (!res) return null;
+    if (!res) return new Tag();
     try {
       const [rows] = await res.conn.execute<TagRow[]>(`SELECT id, name FROM tags WHERE id = ?`, [id]);
-      return rows.length > 0 ? this.map(rows[0]) : null;
+      return rows.length > 0 ? this.map(rows[0]) : new Tag();
     } catch {
       this.logger.error("TagRepository", "findById failed");
-      return null;
+      return new Tag();
     } finally {
       res.conn.release();
     }
   }
 
-  public async findByName(name: string): Promise<Tag | null> {
+  public async findByName(name: string): Promise<Tag> {
     const res = await this.db.getReadConnection();
-    if (!res) return null;
+    if (!res) return new Tag();
     try {
       const [rows] = await res.conn.execute<TagRow[]>(`SELECT id, name FROM tags WHERE name = ?`, [name]);
-      return rows.length > 0 ? this.map(rows[0]) : null;
+      return rows.length > 0 ? this.map(rows[0]) : new Tag();
     } catch {
       this.logger.error("TagRepository", "findByName failed");
-      return null;
+      return new Tag();
     } finally {
       res.conn.release();
     }
   }
 
-  public async create(name: string, createdBy: number): Promise<Tag | null> {
+  public async create(name: string, createdBy: number): Promise<Tag> {
     const res = await this.db.getWriteConnection();
-    if (!res) return null;
+    if (!res) return new Tag();
     try {
       const [result] = await res.conn.execute<ResultSetHeader>(
         `INSERT INTO tags (name, createdBy) VALUES (?, ?)`,
@@ -72,7 +72,7 @@ export class TagRepository implements ITagRepository {
       return new Tag(result.insertId, name);
     } catch {
       this.logger.error("TagRepository", "create failed");
-      return null;
+      return new Tag();
     } finally {
       res.conn.release();
     }
@@ -92,3 +92,4 @@ export class TagRepository implements ITagRepository {
     }
   }
 }
+

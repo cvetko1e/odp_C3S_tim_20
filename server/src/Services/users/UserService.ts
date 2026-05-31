@@ -12,9 +12,9 @@ export class UserService implements IUserService {
     return users.map((u) => new UserDto(u.id, u.username, u.email, u.role, u.isActive));
   }
 
-  public async getById(id: number): Promise<UserDto | null> {
+  public async getById(id: number): Promise<UserDto> {
     const u = await this.userRepo.findById(id);
-    if (u.id === 0) return null;
+    if (u.id === 0) return new UserDto();
     return new UserDto(u.id, u.username, u.email, u.role, u.isActive);
   }
 

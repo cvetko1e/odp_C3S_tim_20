@@ -10,7 +10,7 @@ export class PostService implements IPostService {
     private readonly communityRepo: ICommunityRepository
   ) {}
 
-  public async getPostById(id: number): Promise<Post | null> {
+  public async getPostById(id: number): Promise<Post> {
     return this.postRepo.findById(id);
   }
 
@@ -42,7 +42,7 @@ export class PostService implements IPostService {
 
     const newPost = new Post(0, title, content, imageUrl, authorId, communityId);
     const postId = await this.postRepo.create(newPost);
-    if (postId === null) {
+    if (postId === 0) {
       return { success: false, status: 500, message: 'Failed to create post', data: null };
     }
 
@@ -51,7 +51,7 @@ export class PostService implements IPostService {
     }
 
     const createdPost = await this.postRepo.findById(postId);
-    if (!createdPost) {
+    if (createdPost.id === 0) {
       return { success: false, status: 500, message: 'Failed to load created post', data: null };
     }
 
@@ -71,7 +71,7 @@ export class PostService implements IPostService {
     imageUrl?: string | null
   ): Promise<ServiceResult<boolean>> {
     const post = await this.postRepo.findById(id);
-    if (!post) {
+    if (post.id === 0) {
       return { success: false, status: 404, message: 'Post not found', data: null };
     }
 
@@ -93,7 +93,7 @@ export class PostService implements IPostService {
 
   public async deletePost(id: number, userId: number, userRole: string): Promise<ServiceResult<boolean>> {
     const post = await this.postRepo.findById(id);
-    if (!post) {
+    if (post.id === 0) {
       return { success: false, status: 404, message: 'Post not found', data: null };
     }
 
@@ -115,7 +115,7 @@ export class PostService implements IPostService {
 
   public async likePost(postId: number, userId: number): Promise<ServiceResult<boolean>> {
     const post = await this.postRepo.findById(postId);
-    if (!post) {
+    if (post.id === 0) {
       return { success: false, status: 404, message: 'Post not found', data: null };
     }
 
@@ -138,7 +138,7 @@ export class PostService implements IPostService {
 
   public async unlikePost(postId: number, userId: number): Promise<ServiceResult<boolean>> {
     const post = await this.postRepo.findById(postId);
-    if (!post) {
+    if (post.id === 0) {
       return { success: false, status: 404, message: 'Post not found', data: null };
     }
 

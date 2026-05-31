@@ -31,19 +31,19 @@ export class PostController {
     return this.router;
   }
 
-  private parsePositiveInt(raw: string | string[] | undefined): number | null {
-    if (typeof raw !== 'string') return null;
+  private parsePositiveInt(raw: string | string[] | undefined): number {
+    if (typeof raw !== 'string') return 0;
     const parsed = Number.parseInt(raw, 10);
-    if (!Number.isInteger(parsed) || parsed <= 0) return null;
+    if (!Number.isInteger(parsed) || parsed <= 0) return 0;
     return parsed;
   }
 
   public getById = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = this.parsePositiveInt(req.params.id);
-      if (id === null) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
+      if (id === 0) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
       const post = await this.postService.getPostById(id);
-      if (!post) { res.status(404).json({ success: false, message: 'Post not found' }); return; }
+      if (post.id === 0) { res.status(404).json({ success: false, message: 'Post not found' }); return; }
       res.status(200).json({ success: true, data: post });
     } catch {
       res.status(500).json({ success: false, message: 'Internal server error' });
@@ -53,7 +53,7 @@ export class PostController {
   public getByCommunity = async (req: Request, res: Response): Promise<void> => {
     try {
       const communityId = this.parsePositiveInt(req.params.communityId);
-      if (communityId === null) { res.status(400).json({ success: false, message: 'Invalid community id' }); return; }
+      if (communityId === 0) { res.status(400).json({ success: false, message: 'Invalid community id' }); return; }
       const posts = await this.postService.getPostsByCommunity(communityId);
       res.status(200).json({ success: true, data: posts });
     } catch {
@@ -114,7 +114,7 @@ export class PostController {
   public update = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = this.parsePositiveInt(req.params.id);
-      if (id === null) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
+      if (id === 0) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
       const userId = req.user?.id;
       if (!userId) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
 
@@ -137,7 +137,7 @@ export class PostController {
   public delete = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = this.parsePositiveInt(req.params.id);
-      if (id === null) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
+      if (id === 0) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
       const userId   = req.user?.id;
       const userRole = req.user?.role;
       if (!userId || !userRole) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
@@ -157,7 +157,7 @@ export class PostController {
   public like = async (req: Request, res: Response): Promise<void> => {
     try {
       const postId = this.parsePositiveInt(req.params.id);
-      if (postId === null) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
+      if (postId === 0) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
       const userId = req.user?.id;
       if (!userId) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
 
@@ -176,7 +176,7 @@ export class PostController {
   public unlike = async (req: Request, res: Response): Promise<void> => {
     try {
       const postId = this.parsePositiveInt(req.params.id);
-      if (postId === null) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
+      if (postId === 0) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
       const userId = req.user?.id;
       if (!userId) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
 

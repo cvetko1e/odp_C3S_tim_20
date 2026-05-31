@@ -67,9 +67,9 @@ export class PostRepository implements IPostRepository {
     });
   }
 
-  public async findById(id: number): Promise<Post | null> {
+  public async findById(id: number): Promise<Post> {
     const res = await this.db.getReadConnection();
-    if (!res) return null;
+    if (!res) return new Post();
     try {
       const [rows] = await res.conn.execute<PostRow[]>(
         `SELECT p.id, p.title, p.content, p.mediaUrl AS imageUrl, p.authorId, p.communityId, p.createdAt, p.updatedAt,
@@ -81,13 +81,13 @@ export class PostRepository implements IPostRepository {
          WHERE p.id = ?`,
         [id]
       );
-      if (rows.length === 0) return null;
+      if (rows.length === 0) return new Post();
       const post = this.map(rows[0]);
       await this.populateTagsForPosts([post], res.conn);
       return post;
     } catch {
       this.logger.error("PostRepository", "findById failed");
-      return null;
+      return new Post();
     } finally {
       res.conn.release();
     }
@@ -146,9 +146,9 @@ export class PostRepository implements IPostRepository {
     }
   }
 
-  public async create(post: Post): Promise<number | null> {
+  public async create(post: Post): Promise<number> {
     const res = await this.db.getWriteConnection();
-    if (!res) return null;
+    if (!res) return 0;
     try {
       const [result] = await res.conn.execute<ResultSetHeader>(
         `INSERT INTO posts (communityId, authorId, title, content, mediaUrl)
@@ -158,7 +158,7 @@ export class PostRepository implements IPostRepository {
       return result.insertId;
     } catch {
       this.logger.error("PostRepository", "create failed");
-      return null;
+      return 0;
     } finally {
       res.conn.release();
     }

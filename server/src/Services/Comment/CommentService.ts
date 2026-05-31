@@ -22,7 +22,7 @@ export class CommentService implements ICommentService {
   ): Promise<ServiceResult<CommentDto>> {
     if (parentId !== null) {
       const parent = await this.commentRepo.findById(parentId);
-      if (!parent) {
+      if (parent.id === 0) {
         return { success: false, status: 404, message: "Parent comment not found", data: null };
       }
       if (parent.isDeleted) {
@@ -35,7 +35,7 @@ export class CommentService implements ICommentService {
     }
 
     const comment = await this.commentRepo.create(postId, authorId, content, parentId);
-    if (!comment) {
+    if (comment.id === 0) {
       return { success: false, status: 500, message: "Failed to create comment", data: null };
     }
 
@@ -48,7 +48,7 @@ export class CommentService implements ICommentService {
     content: string
   ): Promise<ServiceResult<boolean>> {
     const comment = await this.commentRepo.findById(id);
-    if (!comment) {
+    if (comment.id === 0) {
       return { success: false, status: 404, message: "Comment not found", data: null };
     }
     if (comment.isDeleted) {
@@ -72,7 +72,7 @@ export class CommentService implements ICommentService {
     userRole: string
   ): Promise<ServiceResult<boolean>> {
     const comment = await this.commentRepo.findById(id);
-    if (!comment) {
+    if (comment.id === 0) {
       return { success: false, status: 404, message: "Comment not found", data: null };
     }
 
@@ -93,7 +93,7 @@ export class CommentService implements ICommentService {
 
   public async likeComment(commentId: number, userId: number): Promise<ServiceResult<boolean>> {
     const comment = await this.commentRepo.findById(commentId);
-    if (!comment) {
+    if (comment.id === 0) {
       return { success: false, status: 404, message: "Comment not found", data: null };
     }
     if (comment.isDeleted) {
@@ -115,7 +115,7 @@ export class CommentService implements ICommentService {
 
   public async unlikeComment(commentId: number, userId: number): Promise<ServiceResult<boolean>> {
     const comment = await this.commentRepo.findById(commentId);
-    if (!comment) {
+    if (comment.id === 0) {
       return { success: false, status: 404, message: "Comment not found", data: null };
     }
 

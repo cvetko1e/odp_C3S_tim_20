@@ -2,8 +2,8 @@ import { CommentDto } from "../../DTOs/comments/CommentDto";
 
 export interface ICommentRepository {
   findByPostId(postId: number): Promise<CommentDto[]>;
-  findById(id: number): Promise<CommentDto | null>;
-  create(postId: number, authorId: number, content: string, parentId: number | null): Promise<CommentDto | null>;
+  findById(id: number): Promise<CommentDto>;
+  create(postId: number, authorId: number, content: string, parentId: number | null): Promise<CommentDto>;
   update(id: number, content: string): Promise<boolean>;
   softDelete(id: number): Promise<boolean>;
 

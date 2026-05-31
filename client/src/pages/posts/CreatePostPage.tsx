@@ -41,7 +41,7 @@ export const CreatePostPage: React.FC = () => {
       data.tagIds
     );
 
-    if (newPost) {
+    if (newPost.id !== 0) {
       navigate(`/posts/${newPost.id}`);
     } else {
       alert("Greska prilikom kreiranja objave.");

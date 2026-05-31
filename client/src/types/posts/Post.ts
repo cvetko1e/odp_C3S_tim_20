@@ -14,3 +14,18 @@ export interface Post {
   commentsCount: number;
   tags: Tag[];
 }
+
+export const emptyPost: Post = {
+  id: 0,
+  title: "",
+  content: "",
+  imageUrl: null,
+  authorId: 0,
+  communityId: 0,
+  createdAt: null,
+  updatedAt: null,
+  authorUsername: null,
+  likesCount: 0,
+  commentsCount: 0,
+  tags: [],
+};

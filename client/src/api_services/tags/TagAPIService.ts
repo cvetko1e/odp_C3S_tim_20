@@ -16,12 +16,12 @@ export const tagApi: ITagAPIService = {
     }
   },
 
-  async createTag(token: string, name: string): Promise<Tag | null> {
+  async createTag(token: string, name: string): Promise<Tag> {
     try {
       const response = await axios.post<TagSingleResponse>(API_URL, { name }, { headers: authHeader(token) });
-      return response.data.success ? (response.data.data ?? null) : null;
+      return response.data.success ? (response.data.data ?? { id: 0, name: "" }) : { id: 0, name: "" };
     } catch {
-      return null;
+      return { id: 0, name: "" };
     }
   },
 
@@ -34,3 +34,4 @@ export const tagApi: ITagAPIService = {
     }
   },
 };
+

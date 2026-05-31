@@ -16,7 +16,7 @@ export class CommunityService implements ICommunityService {
     return this.communityRepo.getAll();
   }
 
-  public async getById(id: number): Promise<CommunityDto | null> {
+  public async getById(id: number): Promise<CommunityDto> {
     return this.communityRepo.getById(id);
   }
 
@@ -24,7 +24,7 @@ export class CommunityService implements ICommunityService {
     return this.communityRepo.getByUserId(userId);
   }
 
-  public async create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto | null> {
+  public async create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto> {
     return this.communityRepo.create(dto, createdBy);
   }
 

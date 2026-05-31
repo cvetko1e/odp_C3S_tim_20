@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { ICommunityAPIService } from "./ICommunityAPIService";
-import type { Community } from "../../types/communities/Community";
+import { emptyCommunity, type Community } from "../../types/communities/Community";
 import type { CreateCommunityDto } from "../../types/communities/CreateCommunityDto";
 import type { UpdateCommunityDto } from "../../types/communities/UpdateCommunityDto";
 import type {
@@ -41,22 +41,22 @@ export const communityApi: ICommunityAPIService = {
     }
   },
 
-  async getCommunityById(id: number, token?: string): Promise<Community | null> {
+  async getCommunityById(id: number, token?: string): Promise<Community> {
     try {
       const headers = token ? authHeader(token) : undefined;
       const response = await axios.get<SingleCommunityResponse>(`${API_URL}/${id}`, { headers });
-      return response.data.success ? (response.data.data ?? null) : null;
+      return response.data.success ? (response.data.data ?? emptyCommunity) : emptyCommunity;
     } catch {
-      return null;
+      return emptyCommunity;
     }
   },
 
-  async createCommunity(token: string, dto: CreateCommunityDto): Promise<Community | null> {
+  async createCommunity(token: string, dto: CreateCommunityDto): Promise<Community> {
     try {
       const response = await axios.post<SingleCommunityResponse>(API_URL, dto, { headers: authHeader(token) });
-      return response.data.success ? (response.data.data ?? null) : null;
+      return response.data.success ? (response.data.data ?? emptyCommunity) : emptyCommunity;
     } catch {
-      return null;
+      return emptyCommunity;
     }
   },
 
