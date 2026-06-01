@@ -54,9 +54,7 @@ export class CommunityRepository implements ICommunityRepository {
       const [rows] = await res.conn.execute<CommunityRow[]>(
         `SELECT id, name, description, rules, avatarUrl, type, createdBy, createdAt, updatedAt
          FROM communities
-         WHERE type = ?
          ORDER BY id DESC`,
-        ["public"],
       );
       return rows.map((row) => this.map(row));
     } catch (err) {

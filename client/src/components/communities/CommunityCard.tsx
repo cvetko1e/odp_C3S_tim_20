@@ -18,6 +18,23 @@ export function CommunityCard({
   showAdminActions = false,
   showMembershipActions = false,
 }: CommunityCardProps) {
+  const membershipLabel = (() => {
+    if (community.memberRole === "moderator") return "Moderator";
+    if (community.memberStatus === "pending") return "Pending request";
+    if (community.memberStatus === "active") return "Member";
+    if (community.memberStatus === "banned") return "Banned";
+    return "";
+  })();
+  const canJoin = showMembershipActions
+    && !!onJoin
+    && community.memberRole !== "moderator"
+    && community.memberStatus !== "active"
+    && community.memberStatus !== "pending";
+  const canLeave = showMembershipActions
+    && !!onLeave
+    && community.memberRole !== "moderator"
+    && community.memberStatus === "active";
+
   return (
     <div className="bg-white/2 border border-white/8 rounded-2xl p-5">
       <div className="flex items-start justify-between gap-3">
@@ -25,8 +42,8 @@ export function CommunityCard({
           <h3 className="text-white text-lg font-semibold">{community.name}</h3>
           <p className="text-xs text-white/35 mt-1">Type: {community.type}</p>
         </div>
-        {community.memberStatus && (
-          <span className="text-xs px-2 py-1 rounded-lg border border-white/10 text-white/60">{community.memberStatus}</span>
+        {membershipLabel && (
+          <span className="text-xs px-2 py-1 rounded-lg border border-white/10 text-white/60">{membershipLabel}</span>
         )}
       </div>
 
@@ -40,7 +57,7 @@ export function CommunityCard({
           Details
         </Link>
 
-        {showMembershipActions && onJoin && (
+        {canJoin && (
           <button
             onClick={() => onJoin(community.id)}
             className="px-3 py-2 text-xs rounded-lg border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 transition-colors"
@@ -49,7 +66,7 @@ export function CommunityCard({
           </button>
         )}
 
-        {showMembershipActions && onLeave && (
+        {canLeave && (
           <button
             onClick={() => onLeave(community.id)}
             className="px-3 py-2 text-xs rounded-lg border border-amber-500/30 text-amber-300 hover:bg-amber-500/10 transition-colors"

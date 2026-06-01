@@ -149,14 +149,12 @@ export class CommunityController {
       if (!rawId) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
       const id = this.parseId(rawId);
       if (id === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
-      const community = await this.communityService.getById(id);
-      if (community.id === 0) { res.status(404).json({ success: false, message: "Community not found" }); return; }
-      const joined = await this.communityService.join(id, req.user.id);
-      if (!joined) { res.status(409).json({ success: false, message: "Already member or operation not allowed" }); return; }
+      const result = await this.communityService.join(id, req.user.id);
+      if (!result.success) { res.status(result.status).json({ success: false, message: result.message }); return; }
 
       await this.auditService.log('JOIN_COMMUNITY', req.user.id, 'community', id, null, req.ip ?? null);
 
-      res.status(200).json({ success: true, message: "Join request processed" });
+      res.status(200).json({ success: true, message: result.message });
     } catch { res.status(500).json({ success: false, message: "Internal server error" }); }
   }
 

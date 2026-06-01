@@ -1,4 +1,5 @@
 import { UserRole } from "../../enums/UserRole";
+import { ServiceResult } from "../../types/ServiceResult";
 import { CommunityDto } from "../../DTOs/communities/CommunityDto";
 import { CreateCommunityDto } from "../../DTOs/communities/CreateCommunityDto";
 import { UpdateCommunityDto } from "../../DTOs/communities/UpdateCommunityDto";
@@ -11,6 +12,6 @@ export interface ICommunityService {
   create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto>;
   update(id: number, dto: UpdateCommunityDto, userId: number, userRole: UserRole): Promise<boolean>;
   delete(id: number, userId: number, userRole: UserRole): Promise<boolean>;
-  join(id: number, userId: number): Promise<boolean>;
+  join(id: number, userId: number): Promise<ServiceResult<boolean>>;
   leave(id: number, userId: number): Promise<boolean>;
 }

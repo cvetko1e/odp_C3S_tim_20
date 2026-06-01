@@ -4,6 +4,7 @@ import { CommunityDto } from "../../Domain/DTOs/communities/CommunityDto";
 import { CreateCommunityDto } from "../../Domain/DTOs/communities/CreateCommunityDto";
 import { UpdateCommunityDto } from "../../Domain/DTOs/communities/UpdateCommunityDto";
 import { UserRole } from "../../Domain/enums/UserRole";
+import { ServiceResult } from "../../Domain/types/ServiceResult";
 
 export class CommunityService implements ICommunityService {
   public constructor(private readonly communityRepo: ICommunityRepository) {}
@@ -42,8 +43,29 @@ export class CommunityService implements ICommunityService {
     return this.communityRepo.delete(id);
   }
 
-  public async join(id: number, userId: number): Promise<boolean> {
-    return this.communityRepo.joinCommunity(id, userId);
+  public async join(id: number, userId: number): Promise<ServiceResult<boolean>> {
+    const community = await this.communityRepo.getById(id);
+    if (community.id === 0) {
+      return { success: false, status: 404, message: "Community not found", data: null };
+    }
+
+    const alreadyMember = await this.communityRepo.isMember(id, userId);
+    if (alreadyMember) {
+      return {
+        success: false,
+        status: 409,
+        message: "You are already a member or have a pending request",
+        data: null,
+      };
+    }
+
+    const joined = await this.communityRepo.joinCommunity(id, userId);
+    if (!joined) {
+      return { success: false, status: 500, message: "Failed to join community", data: null };
+    }
+
+    const message = community.type === "private" ? "Join request sent" : "Joined community successfully";
+    return { success: true, status: 200, message, data: true };
   }
 
   public async leave(id: number, userId: number): Promise<boolean> {

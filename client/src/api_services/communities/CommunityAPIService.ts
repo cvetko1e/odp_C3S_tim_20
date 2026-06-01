@@ -78,12 +78,19 @@ export const communityApi: ICommunityAPIService = {
     }
   },
 
-  async joinCommunity(token: string, id: number): Promise<boolean> {
+  async joinCommunity(token: string, id: number): Promise<CommunityActionResponse> {
     try {
       const response = await axios.post<CommunityActionResponse>(`${API_URL}/${id}/join`, {}, { headers: authHeader(token) });
-      return response.data.success;
-    } catch {
-      return false;
+      return {
+        success: response.data.success,
+        message: response.data.message ?? (response.data.success ? "Joined community successfully" : "Join failed"),
+      };
+    } catch (err) {
+      if (axios.isAxiosError<CommunityActionResponse>(err)) {
+        const message = err.response?.data?.message;
+        return { success: false, message: typeof message === "string" ? message : "Join failed" };
+      }
+      return { success: false, message: "Join failed" };
     }
   },
 
