@@ -1,6 +1,6 @@
-import { DbManager } from "../../connection/DbConnectionPool";
+import { DbManager } from "../../connection/DbManager";;
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
-import { ITagRepository } from "../../../Domain/repositories/Tag/ITagRepository";
+import { ITagRepository } from "../../../Domain/repositories/tag/ITagRepository";
 import { Tag } from "../../../Domain/models/Tag";
 import type { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 
@@ -62,20 +62,21 @@ export class TagRepository implements ITagRepository {
   }
 
   public async create(name: string, createdBy: number): Promise<Tag> {
-    const res = await this.db.getWriteConnection();
-    if (!res) return new Tag();
-    try {
-      const [result] = await res.conn.execute<ResultSetHeader>(
-        `INSERT INTO tags (name, createdBy) VALUES (?, ?)`,
-        [name, createdBy]
-      );
-      return new Tag(result.insertId, name);
-    } catch {
-      this.logger.error("TagRepository", "create failed");
-      return new Tag();
-    } finally {
-      res.conn.release();
-    }
+      const res = await this.db.getWriteConnection();
+      if (!res) throw new Error("No database connection available");
+      try {
+          const [result] = await res.conn.execute<ResultSetHeader>(
+              `INSERT INTO tags (name, createdBy) VALUES (?, ?)`,
+              [name, createdBy]
+          );
+          if (result.insertId === 0) throw new Error("Insert returned no ID");
+          return new Tag(result.insertId, name);
+      } catch (err) {
+          this.logger.error("TagRepository", "create failed", err);
+          throw err;
+      } finally {
+          res.conn.release();
+      }
   }
 
   public async delete(id: number): Promise<boolean> {

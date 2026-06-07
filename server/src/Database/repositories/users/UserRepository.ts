@@ -2,7 +2,7 @@ import type { RowDataPacket, ResultSetHeader } from "mysql2/promise";
 import { IUserRepository } from "../../../Domain/repositories/users/IUserRepository";
 import { User } from "../../../Domain/models/User";
 import { UserRole } from "../../../Domain/enums/UserRole";
-import { DbManager } from "../../connection/DbConnectionPool";
+import { DbManager } from "../../connection/DbManager";;
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
 
 export class UserRepository implements IUserRepository {

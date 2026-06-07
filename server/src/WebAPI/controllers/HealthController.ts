@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { DbManager } from "../../Database/connection/DbConnectionPool";
+import { DbManager } from "../../Database/connection/DbManager";
 import { ILoggerService } from "../../Domain/services/logger/ILoggerService";
 import { authenticate } from "../../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../../Middlewares/authorization/AuthorizeMiddleware";

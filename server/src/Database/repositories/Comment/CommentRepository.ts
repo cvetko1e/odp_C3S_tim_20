@@ -1,7 +1,7 @@
 import type { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import { DbManager } from "../../connection/DbConnectionPool";
+import { DbManager } from "../../connection/DbManager";;
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
-import { ICommentRepository } from "../../../Domain/repositories/Comment/ICommentRepository";
+import { ICommentRepository } from "../../../Domain/repositories/comment/ICommentRepository";
 import { CommentDto } from "../../../Domain/DTOs/comments/CommentDto";
 
 type CommentRow = RowDataPacket & {

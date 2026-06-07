@@ -1,7 +1,7 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import { DbManager } from "../../connection/DbConnectionPool";
+import { DbManager } from "../../connection/DbManager";;
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
-import { IAuditRepository } from "../../../Domain/repositories/Audit/IAuditRepository";
+import { IAuditRepository } from "../../../Domain/repositories/audit/IAuditRepository";
 import { AuditLogDto } from "../../../Domain/DTOs/audit/AuditLogDto";
 
 type AuditRow = RowDataPacket & {

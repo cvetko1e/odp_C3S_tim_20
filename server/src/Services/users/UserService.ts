@@ -2,6 +2,7 @@ import { IUserService } from "../../Domain/services/users/IUserService";
 import { IUserRepository } from "../../Domain/repositories/users/IUserRepository";
 import { UserDto } from "../../Domain/DTOs/users/UserDto";
 import { UserRole } from "../../Domain/enums/UserRole";
+import { ServiceResult } from '../../Domain/types/ServiceResult';
 
 
 export class UserService implements IUserService {
@@ -11,12 +12,15 @@ export class UserService implements IUserService {
     const users = await this.userRepo.findAll();
     return users.map((u) => new UserDto(u.id, u.username, u.email, u.role, u.isActive));
   }
-
-  public async getById(id: number): Promise<UserDto> {
+  public async getById(id: number): Promise<ServiceResult<UserDto>> {
     const u = await this.userRepo.findById(id);
-    if (u.id === 0) return new UserDto();
-    return new UserDto(u.id, u.username, u.email, u.role, u.isActive);
+    if (u.id === 0) {
+      return { success: false, status: 404, message: "User not found", data: null };
+    }
+    return { success: true, status: 200, message: "OK", data: new UserDto(u.id, u.username, u.email, u.role, u.isActive) };
   }
+ 
+
 
   public async deactivate(id: number): Promise<boolean> {
     return this.userRepo.deactivate(id);

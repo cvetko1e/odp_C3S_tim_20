@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
-import { IFollowService } from "../../Domain/services/Follow/IFollowService";
-import { IAuditService } from "../../Domain/services/Audit/IAuditService";
+import { IFollowService } from "../../Domain/services/follow/IFollowService";
+import { IAuditService } from "../../Domain/services/audit/IAuditService";
 import { authenticate } from "../../Middlewares/authentification/AuthMiddleware";
 
 export class FollowController {

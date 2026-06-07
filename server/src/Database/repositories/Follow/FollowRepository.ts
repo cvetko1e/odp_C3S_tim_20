@@ -1,7 +1,7 @@
 import type { RowDataPacket, ResultSetHeader } from "mysql2/promise";
-import { DbManager } from "../../connection/DbConnectionPool";
+import { DbManager } from "../../connection/DbManager";;
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
-import { IFollowRepository } from "../../../Domain/repositories/Follow/IFollowRepository";
+import { IFollowRepository } from "../../../Domain/repositories/follow/IFollowRepository";
 import { UserDto } from "../../../Domain/DTOs/users/UserDto";
 import { UserRole } from "../../../Domain/enums/UserRole";
 

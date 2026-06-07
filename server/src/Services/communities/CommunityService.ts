@@ -16,32 +16,56 @@ export class CommunityService implements ICommunityService {
   public async getAll(): Promise<CommunityDto[]> {
     return this.communityRepo.getAll();
   }
+  public async getById(id: number): Promise<ServiceResult<CommunityDto>> {
+    const community = await this.communityRepo.getById(id);
+        if (community.id === 0) {
+            return { success: false, status: 404, message: "Community not found", data: null };
+        }
+    return { success: true, status: 200, message: "OK", data: community };
+    }
 
-  public async getById(id: number): Promise<CommunityDto> {
-    return this.communityRepo.getById(id);
-  }
 
   public async getMine(userId: number): Promise<CommunityDto[]> {
     return this.communityRepo.getByUserId(userId);
   }
 
-  public async create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto> {
-    return this.communityRepo.create(dto, createdBy);
-  }
+  public async create(dto: CreateCommunityDto, createdBy: number): Promise<ServiceResult<CommunityDto>> {
+    const community = await this.communityRepo.create(dto, createdBy);
+        if (community.id === 0) {
+            return { success: false, status: 500, message: "Failed to create community", data: null };
+        }
+    return { success: true, status: 201, message: "Community created", data: community };
+   }
 
-  public async update(id: number, dto: UpdateCommunityDto, userId: number, userRole: UserRole): Promise<boolean> {
-    if (userRole === UserRole.ADMIN) return this.communityRepo.update(id, dto);
-    const moderator = await this.communityRepo.isModerator(id, userId);
-    if (!moderator) return false;
-    return this.communityRepo.update(id, dto);
-  }
 
-  public async delete(id: number, userId: number, userRole: UserRole): Promise<boolean> {
-    if (userRole === UserRole.ADMIN) return this.communityRepo.delete(id);
-    const moderator = await this.communityRepo.isModerator(id, userId);
-    if (!moderator) return false;
-    return this.communityRepo.delete(id);
-  }
+    public async update(id: number, dto: UpdateCommunityDto, userId: number, userRole: UserRole): Promise<ServiceResult<boolean>> {
+     if (userRole !== UserRole.ADMIN) {
+         const moderator = await this.communityRepo.isModerator(id, userId);
+            if (!moderator) {
+                return { success: false, status: 403, message: "Unauthorized to update this community", data: null };
+            }
+     }
+     const ok = await this.communityRepo.update(id, dto);
+        if (!ok) {
+            return { success: false, status: 500, message: "Failed to update community", data: null };
+        }
+     return { success: true, status: 200, message: "Community updated", data: true };
+    }
+
+    public async delete(id: number, userId: number, userRole: UserRole): Promise<ServiceResult<boolean>> {
+        if (userRole !== UserRole.ADMIN) {
+            const moderator = await this.communityRepo.isModerator(id, userId);
+            if (!moderator) {
+                return { success: false, status: 403, message: "Unauthorized to delete this community", data: null };
+            }
+        }
+        const ok = await this.communityRepo.delete(id);
+        if (!ok) {
+            return { success: false, status: 500, message: "Failed to delete community", data: null };
+        }
+        return { success: true, status: 200, message: "Community deleted", data: true };
+    }
+
 
   public async join(id: number, userId: number): Promise<ServiceResult<boolean>> {
     const community = await this.communityRepo.getById(id);
@@ -68,7 +92,11 @@ export class CommunityService implements ICommunityService {
     return { success: true, status: 200, message, data: true };
   }
 
-  public async leave(id: number, userId: number): Promise<boolean> {
-    return this.communityRepo.leaveCommunity(id, userId);
-  }
+    public async leave(id: number, userId: number): Promise<ServiceResult<boolean>> {
+        const ok = await this.communityRepo.leaveCommunity(id, userId);
+        if (!ok) {
+            return { success: false, status: 409, message: "Failed to leave community — you may be the moderator", data: null };
+        }
+        return { success: true, status: 200, message: "Left community", data: true };
+    }
 }

@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { IAuditService } from "../../Domain/services/Audit/IAuditService";
+import { IAuditService } from "../../Domain/services/audit/IAuditService";
 import { authenticate } from "../../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../../Middlewares/authorization/AuthorizeMiddleware";
 import { UserRole } from "../../Domain/enums/UserRole";

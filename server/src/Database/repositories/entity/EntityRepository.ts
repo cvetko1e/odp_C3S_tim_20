@@ -4,7 +4,7 @@ import { Entity } from "../../../Domain/models/Entity";
 import { EntityDto } from "../../../Domain/DTOs/entity/EntityDto";
 import { CreateEntityDto } from "../../../Domain/DTOs/entity/CreateEntityDto";
 import { EntityStatus } from "../../../Domain/enums/EntityStatus";
-import { DbManager } from "../../connection/DbConnectionPool";
+import { DbManager } from "../../connection/DbManager";;
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
 
 export class EntityRepository implements IEntityRepository {

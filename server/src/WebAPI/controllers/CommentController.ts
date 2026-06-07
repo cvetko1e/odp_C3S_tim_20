@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
-import { ICommentService } from "../../Domain/services/Comment/ICommentService";
-import { IAuditService } from "../../Domain/services/Audit/IAuditService";
+import { ICommentService } from "../../Domain/services/comment/ICommentService";
+import { IAuditService } from "../../Domain/services/audit/IAuditService";
 import { authenticate } from "../../Middlewares/authentification/AuthMiddleware";
 
 export class CommentController {

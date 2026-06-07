@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 
 import { ConsoleLoggerService } from "./Services/logger/ConsoleLoggerService";
-import { DbManager } from "./Database/connection/DbConnectionPool";
+import { DbManager } from "./Database/connection/DbManager";
 
 import { UserRepository }      from "./Database/repositories/users/UserRepository";
 import { EntityRepository }    from "./Database/repositories/entity/EntityRepository";
@@ -18,11 +18,11 @@ import { AuthService }      from "./Services/auth/AuthService";
 import { UserService }      from "./Services/users/UserService";
 import { EntityService }    from "./Services/entity/EntityService";
 import { CommunityService } from "./Services/communities/CommunityService";
-import { TagService }       from "./Services/Tag/TagServices";
-import { PostService }      from "./Services/Post/PostServices";
-import { CommentService }   from "./Services/Comment/CommentService";
-import { FollowService }    from "./Services/Follow/FollowService";
-import { AuditService }     from "./Services/Audit/AuditService";
+import { TagService }       from "./Services/tag/TagServices";
+import { PostService }      from "./Services/post/PostServices";
+import { CommentService }   from "./Services/comment/CommentService";
+import { FollowService }    from "./Services/follow/FollowService";
+import { AuditService }     from "./Services/audit/AuditService";
 
 import { AuthController }      from "./WebAPI/controllers/AuthController";
 import { UserController }      from "./WebAPI/controllers/UserController";

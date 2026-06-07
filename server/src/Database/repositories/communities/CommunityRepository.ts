@@ -1,5 +1,5 @@
 import { RowDataPacket, ResultSetHeader } from "mysql2";
-import { DbManager } from "../../connection/DbConnectionPool";
+import { DbManager } from "../../connection/DbManager";;
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
 import { ICommunityRepository } from "../../../Domain/repositories/communities/ICommunityRepository";
 import { CommunityType } from "../../../Domain/models/Community";

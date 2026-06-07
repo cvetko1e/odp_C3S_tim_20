@@ -1,5 +1,5 @@
-import { IFollowService } from "../../Domain/services/Follow/IFollowService";
-import { IFollowRepository } from "../../Domain/repositories/Follow/IFollowRepository";
+import { IFollowService } from "../../Domain/services/follow/IFollowService";
+import { IFollowRepository } from "../../Domain/repositories/follow/IFollowRepository";
 import { UserDto } from "../../Domain/DTOs/users/UserDto";
 import { ServiceResult } from "../../Domain/types/ServiceResult";
 
