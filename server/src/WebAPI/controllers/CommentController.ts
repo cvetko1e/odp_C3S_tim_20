@@ -10,7 +10,7 @@ export class CommentController {
     private readonly commentService: ICommentService,
     private readonly auditService: IAuditService,
   ) {
-    this.router.get("/comments/post/:postId",  authenticate, this.getByPost.bind(this));
+    this.router.get("/comments/post/:postId",  this.getByPost.bind(this));
     this.router.post("/comments",              authenticate, this.create.bind(this));
     this.router.put("/comments/:id",           authenticate, this.update.bind(this));
     this.router.delete("/comments/:id",        authenticate, this.delete.bind(this));

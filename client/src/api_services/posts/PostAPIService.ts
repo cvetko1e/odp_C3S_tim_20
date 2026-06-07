@@ -7,18 +7,18 @@ const API_URL = import.meta.env.VITE_API_URL + "posts";
 const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
 
 export const postApi: IPostAPIService = {
-  async getPostById(id: number, token: string): Promise<Post> {
+  async getPostById(id: number, token?: string): Promise<Post> {
     try {
-      const response = await axios.get<SinglePostResponse>(`${API_URL}/${id}`, { headers: authHeader(token) });
+      const response = await axios.get<SinglePostResponse>(`${API_URL}/${id}`, { headers: token ? authHeader(token) : undefined });
       return response.data.success ? (response.data.data ?? emptyPost) : emptyPost;
     } catch {
       return emptyPost;
     }
   },
 
-  async getPostsByCommunity(communityId: number, token: string): Promise<Post[]> {
+  async getPostsByCommunity(communityId: number, token?: string): Promise<Post[]> {
     try {
-      const response = await axios.get<PostListResponse>(`${API_URL}/community/${communityId}`, { headers: authHeader(token) });
+      const response = await axios.get<PostListResponse>(`${API_URL}/community/${communityId}`, { headers: token ? authHeader(token) : undefined });
       return response.data.success ? (response.data.data ?? []) : [];
     } catch {
       return [];

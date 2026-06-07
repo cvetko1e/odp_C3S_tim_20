@@ -6,6 +6,7 @@ import { authenticate } from "../../Middlewares/authentification/AuthMiddleware"
 import { authorize } from "../../Middlewares/authorization/AuthorizeMiddleware";
 import { CreateCommunityDto } from "../../Domain/DTOs/communities/CreateCommunityDto";
 import { UpdateCommunityDto } from "../../Domain/DTOs/communities/UpdateCommunityDto";
+import { CommunityMemberRole, CommunityMemberStatus } from "../../Domain/DTOs/communities/CommunityDto";
 import { validateCreateCommunity, validateUpdateCommunity } from "../validators/communities/validateCommunity";
 
 export class CommunityController {
@@ -24,6 +25,10 @@ export class CommunityController {
         this.router.delete("/communities/:id", authenticate, this.delete.bind(this));
         this.router.post("/communities/:id/join", authenticate, this.join.bind(this));
         this.router.delete("/communities/:id/leave", authenticate, this.leave.bind(this));
+        this.router.get("/communities/:id/members", authenticate, this.getMembers.bind(this));
+        this.router.patch("/communities/:id/members/:userId/role", authenticate, this.updateMemberRole.bind(this));
+        this.router.patch("/communities/:id/members/:userId/status", authenticate, this.updateMemberStatus.bind(this));
+        this.router.delete("/communities/:id/members/:userId", authenticate, this.removeMember.bind(this));
     }
 
     private parseId(rawId: string): number {
@@ -150,6 +155,73 @@ export class CommunityController {
             const id = this.parseId(this.getSingleParam(req.params.id));
             if (id === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
             const result = await this.communityService.leave(id, req.user.id);
+            res.status(result.status).json({ success: result.success, message: result.message });
+        } catch { res.status(500).json({ success: false, message: "Internal server error" }); }
+    }
+
+    private async getMembers(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
+            const id = this.parseId(this.getSingleParam(req.params.id));
+            if (id === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
+            const result = await this.communityService.getMembers(id, req.user.id, req.user.role);
+            res.status(result.status).json({ success: result.success, message: result.message, data: result.data });
+        } catch { res.status(500).json({ success: false, message: "Internal server error" }); }
+    }
+
+    private async updateMemberRole(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
+            const id = this.parseId(this.getSingleParam(req.params.id));
+            const userId = this.parseId(this.getSingleParam(req.params.userId));
+            if (id === 0 || userId === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
+
+            const role = typeof req.body.role === "string" ? req.body.role : "";
+            if (role !== "moderator" && role !== "member") {
+                res.status(400).json({ success: false, message: "Role must be 'moderator' or 'member'" });
+                return;
+            }
+
+            const result = await this.communityService.updateMemberRole(id, userId, role as CommunityMemberRole, req.user.id, req.user.role);
+            if (result.success) {
+                await this.auditService.log("COMMUNITY_MEMBER_ROLE", req.user.id, "community", id, JSON.stringify({ userId, role }), req.ip ?? null);
+            }
+            res.status(result.status).json({ success: result.success, message: result.message });
+        } catch { res.status(500).json({ success: false, message: "Internal server error" }); }
+    }
+
+    private async updateMemberStatus(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
+            const id = this.parseId(this.getSingleParam(req.params.id));
+            const userId = this.parseId(this.getSingleParam(req.params.userId));
+            if (id === 0 || userId === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
+
+            const status = typeof req.body.status === "string" ? req.body.status : "";
+            if (status !== "active" && status !== "pending" && status !== "banned") {
+                res.status(400).json({ success: false, message: "Status must be 'active', 'pending', or 'banned'" });
+                return;
+            }
+
+            const result = await this.communityService.updateMemberStatus(id, userId, status as CommunityMemberStatus, req.user.id, req.user.role);
+            if (result.success) {
+                await this.auditService.log("COMMUNITY_MEMBER_STATUS", req.user.id, "community", id, JSON.stringify({ userId, status }), req.ip ?? null);
+            }
+            res.status(result.status).json({ success: result.success, message: result.message });
+        } catch { res.status(500).json({ success: false, message: "Internal server error" }); }
+    }
+
+    private async removeMember(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
+            const id = this.parseId(this.getSingleParam(req.params.id));
+            const userId = this.parseId(this.getSingleParam(req.params.userId));
+            if (id === 0 || userId === 0) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
+
+            const result = await this.communityService.removeMember(id, userId, req.user.id, req.user.role);
+            if (result.success) {
+                await this.auditService.log("COMMUNITY_MEMBER_REMOVE", req.user.id, "community", id, JSON.stringify({ userId }), req.ip ?? null);
+            }
             res.status(result.status).json({ success: result.success, message: result.message });
         } catch { res.status(500).json({ success: false, message: "Internal server error" }); }
     }

@@ -17,7 +17,7 @@ export class UserService implements IUserService {
     if (u.id === 0) {
       return { success: false, status: 404, message: "User not found", data: null };
     }
-    return { success: true, status: 200, message: "OK", data: new UserDto(u.id, u.username, u.email, u.role, u.isActive) };
+    return { success: true, status: 200, message: "OK", data: new UserDto(u.id, u.username, u.email, u.role, u.isActive, u.followersCount, u.followingCount) };
   }
  
 

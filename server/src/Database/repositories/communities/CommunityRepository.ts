@@ -4,8 +4,10 @@ import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
 import { ICommunityRepository } from "../../../Domain/repositories/communities/ICommunityRepository";
 import { CommunityType } from "../../../Domain/models/Community";
 import { CommunityDto, CommunityMemberRole, CommunityMemberStatus } from "../../../Domain/DTOs/communities/CommunityDto";
+import { CommunityMemberDto } from "../../../Domain/DTOs/communities/CommunityMemberDto";
 import { CreateCommunityDto } from "../../../Domain/DTOs/communities/CreateCommunityDto";
 import { UpdateCommunityDto } from "../../../Domain/DTOs/communities/UpdateCommunityDto";
+import { UserRole } from "../../../Domain/enums/UserRole";
 
 type CommunityRow = RowDataPacket & {
   id: number;
@@ -24,6 +26,16 @@ type CommunityRow = RowDataPacket & {
 type CountRow = RowDataPacket & { cnt: number };
 
 type CommunityTypeRow = RowDataPacket & { type: CommunityType };
+type CommunityMemberRow = RowDataPacket & {
+  id: number;
+  username: string;
+  email: string;
+  role: UserRole;
+  isActive: number;
+  memberRole: CommunityMemberRole;
+  memberStatus: CommunityMemberStatus;
+  joinedAt: Date | null;
+};
 
 export class CommunityRepository implements ICommunityRepository {
   public constructor(
@@ -47,6 +59,19 @@ export class CommunityRepository implements ICommunityRepository {
     );
   }
 
+  private mapMember(row: CommunityMemberRow): CommunityMemberDto {
+    return new CommunityMemberDto(
+      row.id,
+      row.username,
+      row.email,
+      row.role,
+      row.isActive,
+      row.memberRole,
+      row.memberStatus,
+      row.joinedAt ? new Date(row.joinedAt).toISOString() : null,
+    );
+  }
+
   public async getPublic(): Promise<CommunityDto[]> {
     const res = await this.db.getReadConnection();
     if (!res) return [];
@@ -54,6 +79,7 @@ export class CommunityRepository implements ICommunityRepository {
       const [rows] = await res.conn.execute<CommunityRow[]>(
         `SELECT id, name, description, rules, avatarUrl, type, createdBy, createdAt, updatedAt
          FROM communities
+         WHERE type = 'public'
          ORDER BY id DESC`,
       );
       return rows.map((row) => this.map(row));
@@ -292,6 +318,83 @@ export class CommunityRepository implements ICommunityRepository {
       return result.affectedRows > 0;
     } catch (err) {
       this.logger.error("CommunityRepository", "leaveCommunity failed", err);
+      return false;
+    } finally {
+      res.conn.release();
+    }
+  }
+
+  public async getMembers(communityId: number): Promise<CommunityMemberDto[]> {
+    const res = await this.db.getReadConnection();
+    if (!res) return [];
+    try {
+      const [rows] = await res.conn.execute<CommunityMemberRow[]>(
+        `SELECT u.id, u.username, u.email, u.role, u.isActive,
+                cm.role AS memberRole, cm.status AS memberStatus, cm.joinedAt
+         FROM community_members cm
+         INNER JOIN users u ON u.id = cm.userId
+         WHERE cm.communityId = ?
+         ORDER BY cm.status ASC, cm.role DESC, cm.joinedAt DESC`,
+        [communityId],
+      );
+      return rows.map((row) => this.mapMember(row));
+    } catch (err) {
+      this.logger.error("CommunityRepository", "getMembers failed", err);
+      return [];
+    } finally {
+      res.conn.release();
+    }
+  }
+
+  public async updateMemberRole(communityId: number, userId: number, role: CommunityMemberRole): Promise<boolean> {
+    const res = await this.db.getWriteConnection();
+    if (!res) return false;
+    try {
+      const [result] = await res.conn.execute<ResultSetHeader>(
+        `UPDATE community_members
+         SET role = ?
+         WHERE communityId = ? AND userId = ? AND status = 'active'`,
+        [role, communityId, userId],
+      );
+      return result.affectedRows > 0;
+    } catch (err) {
+      this.logger.error("CommunityRepository", "updateMemberRole failed", err);
+      return false;
+    } finally {
+      res.conn.release();
+    }
+  }
+
+  public async updateMemberStatus(communityId: number, userId: number, status: CommunityMemberStatus): Promise<boolean> {
+    const res = await this.db.getWriteConnection();
+    if (!res) return false;
+    try {
+      const [result] = await res.conn.execute<ResultSetHeader>(
+        `UPDATE community_members
+         SET status = ?
+         WHERE communityId = ? AND userId = ?`,
+        [status, communityId, userId],
+      );
+      return result.affectedRows > 0;
+    } catch (err) {
+      this.logger.error("CommunityRepository", "updateMemberStatus failed", err);
+      return false;
+    } finally {
+      res.conn.release();
+    }
+  }
+
+  public async removeMember(communityId: number, userId: number): Promise<boolean> {
+    const res = await this.db.getWriteConnection();
+    if (!res) return false;
+    try {
+      const [result] = await res.conn.execute<ResultSetHeader>(
+        `DELETE FROM community_members WHERE communityId = ? AND userId = ?`,
+        [communityId, userId],
+      );
+      return result.affectedRows > 0;
+    } catch (err) {
+      this.logger.error("CommunityRepository", "removeMember failed", err);
       return false;
     } finally {
       res.conn.release();
