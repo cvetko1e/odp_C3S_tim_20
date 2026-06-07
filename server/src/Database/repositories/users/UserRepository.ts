@@ -23,6 +23,8 @@ export class UserRepository implements IUserRepository {
       r.lastName,
       r.bio ?? null,
       r.profileImage ?? null,
+      Number(r.followersCount ?? 0),
+      Number(r.followingCount ?? 0),
     );
   }
 
@@ -58,7 +60,14 @@ export class UserRepository implements IUserRepository {
     const res = await this.db.getReadConnection();
     if (!res) return new User();
     try {
-      const [rows] = await res.conn.execute<RowDataPacket[]>(`SELECT * FROM users WHERE id = ?`, [id]);
+      const [rows] = await res.conn.execute<RowDataPacket[]>(
+        `SELECT u.*,
+                (SELECT COUNT(*) FROM user_follows WHERE followingId = u.id) AS followersCount,
+                (SELECT COUNT(*) FROM user_follows WHERE followerId = u.id) AS followingCount
+         FROM users u
+         WHERE u.id = ?`,
+        [id],
+      );
       return rows.length > 0 ? this.map(rows[0]) : new User();
     } catch (err) {
       this.logger.error("UserRepository", "findById failed", err);

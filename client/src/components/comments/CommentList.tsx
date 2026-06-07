@@ -6,7 +6,7 @@ import type { CommentDto } from "../../models/comments/CommentTypes";
 
 interface CommentListProps {
   postId: number;
-  currentUserId: number;
+  currentUserId: number | null;
 }
 
 export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId }) => {
@@ -21,16 +21,17 @@ export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId 
     const res = await commentsApi.getByPost(postId);
     if (res.success && res.data) {
       setComments(res.data);
+      setError("");
     } else {
       setError(res.message);
     }
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [postId]);
+  useEffect(() => { void load(); }, [postId]);
 
   const handleSubmit = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() || currentUserId === null) return;
     setSubmitting(true);
     const res = await commentsApi.create(postId, content.trim(), null);
     if (res.success) {
@@ -46,28 +47,31 @@ export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId 
         Komentari ({comments.length})
       </h2>
 
-      {/* New comment box */}
-      <div className="bg-white/3 border border-white/6 rounded-xl p-4 space-y-3">
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Napišite komentar..."
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 resize-none focus:outline-none focus:border-white/20"
-          rows={3}
-          maxLength={2000}
-        />
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-white/20">{content.length}/2000</span>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || !content.trim()}
-            className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-lg hover:bg-sky-500/30 disabled:opacity-50 transition-colors"
-          >
-            {submitting && <Spinner size={12} />}
-            Objavi
-          </button>
+      {currentUserId !== null ? (
+        <div className="bg-white/3 border border-white/6 rounded-xl p-4 space-y-3">
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Napisite komentar..."
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 resize-none focus:outline-none focus:border-white/20"
+            rows={3}
+            maxLength={2000}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-white/20">{content.length}/2000</span>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || !content.trim()}
+              className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-lg hover:bg-sky-500/30 disabled:opacity-50 transition-colors"
+            >
+              {submitting && <Spinner size={12} />}
+              Objavi
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="text-sm text-white/35">Prijavite se da biste komentarisali.</p>
+      )}
 
       {error && <ErrorBox message={error} />}
 
@@ -81,7 +85,7 @@ export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId 
             <CommentItem
               key={comment.id}
               comment={comment}
-              currentUserId={currentUserId}
+              currentUserId={currentUserId ?? 0}
               depth={0}
               onReplyPosted={load}
             />

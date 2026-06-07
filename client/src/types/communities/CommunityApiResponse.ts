@@ -1,4 +1,5 @@
 import type { Community } from "./Community";
+import type { CommunityMember } from "./Community";
 
 export type CommunityApiResponse = {
   success: boolean;
@@ -21,4 +22,10 @@ export type SingleCommunityResponse = {
 export type CommunityActionResponse = {
   success: boolean;
   message?: string;
+};
+
+export type CommunityMemberListResponse = {
+  success: boolean;
+  message?: string;
+  data?: CommunityMember[];
 };

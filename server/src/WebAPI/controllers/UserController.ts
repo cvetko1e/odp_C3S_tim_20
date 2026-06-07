@@ -13,7 +13,7 @@ export class UserController {
         private readonly auditService: IAuditService,
     ) {
         this.router.get("/users", authenticate, authorize(UserRole.ADMIN), this.getAll.bind(this));
-        this.router.get("/users/:id", authenticate, authorize(UserRole.ADMIN), this.getById.bind(this));
+        this.router.get("/users/:id", this.getById.bind(this));
         this.router.patch("/users/:id/deactivate", authenticate, authorize(UserRole.ADMIN), this.deactivate.bind(this));
         this.router.put("/users/:id/role", authenticate, authorize(UserRole.ADMIN), this.changeRole.bind(this));
     }

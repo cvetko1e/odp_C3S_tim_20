@@ -12,5 +12,7 @@ export class User {
     public lastName: string = "",
     public bio: string | null = null,
     public profileImage: string | null = null,
+    public followersCount: number = 0,
+    public followingCount: number = 0,
   ) {}
 }
