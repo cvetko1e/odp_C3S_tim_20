@@ -6,6 +6,7 @@ const tiles = [
   { label: "Communities", sub: "View & delete communities", path: "/admin/communities", color: "text-emerald-400" },
   { label: "Tags",        sub: "Create & remove tags",    path: "/admin/tags",        color: "text-amber-400" },
   { label: "Audit Log",   sub: "View system activity",    path: "/admin/audit",       color: "text-violet-400" },
+  { label: "Health", sub: "DB nodes & failover", path: "/admin/health", color: "text-rose-400" },
 ];
 
 export default function AdminDashboardPage() {

@@ -18,6 +18,7 @@ import AdminUsersPage from "./pages/admin/UsersPage";
 import AdminCommunitiesPage from "./pages/admin/AdminCommunitiesPage";
 import AdminTagsPage from "./pages/admin/AdminTagsPage";
 import AdminAuditLogPage from "./pages/admin/AdminAuditLogPage";
+import AdminHealthPage from "./pages/admin/AdminHealthPage";
 
 import CommunitiesPage from "./pages/communities/CommunitiesPage";
 import MyCommunitiesPage from "./pages/communities/MyCommunitiesPage";
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/admin/communities" element={<ProtectedRoute requiredRole="admin"><AdminCommunitiesPage /></ProtectedRoute>} />
           <Route path="/admin/tags" element={<ProtectedRoute requiredRole="admin"><AdminTagsPage /></ProtectedRoute>} />
           <Route path="/admin/audit" element={<ProtectedRoute requiredRole="admin"><AdminAuditLogPage /></ProtectedRoute>} />
+          <Route path="/admin/health" element={<ProtectedRoute requiredRole="admin"><AdminHealthPage /></ProtectedRoute>}/>
 
 
       {/* Public routes */}
