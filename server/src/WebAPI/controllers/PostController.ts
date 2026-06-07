@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { authenticate } from '../../Middlewares/authentification/AuthMiddleware';
 import { Request, Response } from 'express';
-import { IPostService } from '../../Domain/services/post/IPostServices';
-import { IAuditService } from '../../Domain/services/audit/IAuditService';
+import { IPostService } from '../../Domain/services/Post/IPostServices';
+import { IAuditService } from '../../Domain/services/Audit/IAuditService';
 import { validateCreatePost, validateUpdatePost } from '../validators/posts/validatePost';
 
 export class PostController {

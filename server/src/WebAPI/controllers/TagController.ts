@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticate } from '../../Middlewares/authentification/AuthMiddleware';
 import { authorize } from '../../Middlewares/authorization/AuthorizeMiddleware';
 import { UserRole } from '../../Domain/enums/UserRole';
-import { ITagService } from '../../Domain/services/tag/ITagServices';
+import { ITagService } from '../../Domain/services/Tag/ITagServices';
 import { validateTag } from '../validators/tags/validateTag';
 
 export class TagController {

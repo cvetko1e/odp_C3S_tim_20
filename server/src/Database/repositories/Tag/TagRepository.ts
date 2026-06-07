@@ -1,6 +1,6 @@
 import { DbManager } from "../../connection/DbManager";;
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
-import { ITagRepository } from "../../../Domain/repositories/tag/ITagRepository";
+import { ITagRepository } from "../../../Domain/repositories/Tag/ITagRepository";
 import { Tag } from "../../../Domain/models/Tag";
 import type { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 

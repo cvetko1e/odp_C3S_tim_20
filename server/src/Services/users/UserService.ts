@@ -22,13 +22,28 @@ export class UserService implements IUserService {
  
 
 
-  public async deactivate(id: number): Promise<boolean> {
-    return this.userRepo.deactivate(id);
+  public async deactivate(id: number): Promise<ServiceResult<boolean>> {
+    const ok = await this.userRepo.deactivate(id);
+    return {
+      success: ok,
+      status: ok ? 200 : 404,
+      message: ok ? "User deactivated" : "User not found",
+      data: ok,
+    };
   }
 
-  public async changeRole(id: number, role: UserRole): Promise<boolean> {
-    if (role !== UserRole.ADMIN && role !== UserRole.USER) return false;
-    return this.userRepo.changeRole(id, role);
+  public async changeRole(id: number, role: UserRole): Promise<ServiceResult<boolean>> {
+    if (role !== UserRole.ADMIN && role !== UserRole.USER) {
+      return { success: false, status: 400, message: "Invalid role", data: false };
+    }
+
+    const ok = await this.userRepo.changeRole(id, role);
+    return {
+      success: ok,
+      status: ok ? 200 : 404,
+      message: ok ? "Role changed" : "User not found",
+      data: ok,
+    };
   }
 
 }

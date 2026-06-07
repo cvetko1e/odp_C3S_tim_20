@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import jwt from "jsonwebtoken";
 import { IAuthService } from "../../Domain/services/auth/IAuthService";
-import { IAuditService } from "../../Domain/services/audit/IAuditService";
+import { IAuditService } from "../../Domain/services/Audit/IAuditService";
 import { authenticate } from "../../Middlewares/authentification/AuthMiddleware";
 import { ValidationResult } from "../../Domain/types/ValidationResult";
 import { validateLogin } from "../validators/auth/validateLogin";

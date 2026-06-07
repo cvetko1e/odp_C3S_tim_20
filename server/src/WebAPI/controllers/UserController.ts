@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import { IUserService } from "../../Domain/services/users/IUserService";
-import { IAuditService } from "../../Domain/services/audit/IAuditService";
+import { IAuditService } from "../../Domain/services/Audit/IAuditService";
 import { authenticate } from "../../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../../Middlewares/authorization/AuthorizeMiddleware";
 import { UserRole } from "../../Domain/enums/UserRole";
@@ -29,7 +29,7 @@ export class UserController {
 
     private async getById(req: Request, res: Response): Promise<void> {
         try {
-            const id = parseInt(req.params.id, 10);
+            const id = parseInt(req.params.id as string, 10);
             if (isNaN(id)) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
             const result = await this.userService.getById(id);
             res.status(result.status).json({ success: result.success, message: result.message, data: result.data });
@@ -40,7 +40,7 @@ export class UserController {
 
     private async deactivate(req: Request, res: Response): Promise<void> {
         try {
-            const id = parseInt(req.params.id, 10);
+            const id = parseInt(req.params.id as string, 10);
             if (isNaN(id)) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
             const result = await this.userService.deactivate(id);
             res.status(result.status).json({ success: result.success, message: result.message });
@@ -51,7 +51,7 @@ export class UserController {
 
     private async changeRole(req: Request, res: Response): Promise<void> {
         try {
-            const id = parseInt(req.params.id, 10);
+            const id = parseInt(req.params.id as string, 10);
             if (isNaN(id)) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
 
             const { role } = req.body as { role?: string };

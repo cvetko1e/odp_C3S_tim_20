@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import { ICommunityService } from "../../Domain/services/communities/ICommunityService";
-import { IAuditService } from "../../Domain/services/audit/IAuditService";
+import { IAuditService } from "../../Domain/services/Audit/IAuditService";
 import { UserRole } from "../../Domain/enums/UserRole";
 import { authenticate } from "../../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../../Middlewares/authorization/AuthorizeMiddleware";

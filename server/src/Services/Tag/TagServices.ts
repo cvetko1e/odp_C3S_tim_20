@@ -1,5 +1,5 @@
-import { ITagService } from '../../Domain/services/tag/ITagServices';
-import { ITagRepository } from '../../Domain/repositories/tag/ITagRepository';
+import { ITagService } from '../../Domain/services/Tag/ITagServices';
+import { ITagRepository } from '../../Domain/repositories/Tag/ITagRepository';
 import { Tag } from '../../Domain/models/Tag';
 import { ServiceResult } from '../../Domain/types/ServiceResult';
 

@@ -1,5 +1,5 @@
-import { ICommentService } from "../../Domain/services/comment/ICommentService";
-import { ICommentRepository } from "../../Domain/repositories/comment/ICommentRepository";
+import { ICommentService } from "../../Domain/services/Comment/ICommentService";
+import { ICommentRepository } from "../../Domain/repositories/Comment/ICommentRepository";
 import { CommentDto } from "../../Domain/DTOs/comments/CommentDto";
 import { ServiceResult } from "../../Domain/types/ServiceResult";
 

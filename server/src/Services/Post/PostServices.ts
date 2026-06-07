@@ -1,5 +1,5 @@
-import { IPostService } from '../../Domain/services/post/IPostServices';
-import { IPostRepository } from '../../Domain/repositories/post/IPostRepository';
+import { IPostService } from '../../Domain/services/Post/IPostServices';
+import { IPostRepository } from '../../Domain/repositories/Post/IPostRepository';
 import { ICommunityRepository } from '../../Domain/repositories/communities/ICommunityRepository';
 import { Post } from '../../Domain/models/Post';
 import { ServiceResult } from '../../Domain/types/ServiceResult';

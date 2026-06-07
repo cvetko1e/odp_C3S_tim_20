@@ -1,5 +1,5 @@
-import { IAuditService } from "../../Domain/services/audit/IAuditService";
-import { IAuditRepository } from "../../Domain/repositories/audit/IAuditRepository";
+import { IAuditService } from "../../Domain/services/Audit/IAuditService";
+import { IAuditRepository } from "../../Domain/repositories/Audit/IAuditRepository";
 import { AuditLogDto } from "../../Domain/DTOs/audit/AuditLogDto";
 
 export class AuditService implements IAuditService {
