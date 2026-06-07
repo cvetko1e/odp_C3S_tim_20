@@ -4,7 +4,7 @@ import { LikeButton } from "./LikeButton";
 
 interface PostCardProps {
   post: Post;
-  currentUserId: number;
+  currentUserId: number | null;
   isLikedInitially: boolean;
   onLikeToggle: (postId: number) => void;
   onCardClick?: (postId: number) => void;
@@ -17,8 +17,9 @@ export const PostCard: React.FC<PostCardProps> = ({
   onLikeToggle,
   onCardClick,
 }) => {
-  // Pravilo iz zadatka: Korisnik ne može lajkovati sopstvenu objavu
-  const isOwnPost = post.authorId === currentUserId;
+  
+  const isAuthenticated = currentUserId !== null;
+  const isOwnPost = currentUserId !== null && post.authorId === currentUserId;
 
   return (
     <div
@@ -59,12 +60,16 @@ export const PostCard: React.FC<PostCardProps> = ({
       )}
 
       <div className="flex items-center gap-4 pt-2 border-t border-gray-100">
-        <LikeButton
-          likesCount={post.likesCount}
-          isLiked={isLikedInitially}
-          onLikeToggle={() => onLikeToggle(post.id)}
-          disabled={isOwnPost}
-        />
+        {isAuthenticated ? (
+       <LikeButton
+        likesCount={post.likesCount}
+        isLiked={isLikedInitially}
+        onLikeToggle={() => onLikeToggle(post.id)}
+        disabled={isOwnPost}
+          />
+        ) : (
+            <span className="text-sm text-gray-500">{post.likesCount} lajkova</span>
+        )}
         
         <div className="flex items-center gap-1 text-sm text-gray-500">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">

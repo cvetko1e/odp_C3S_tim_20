@@ -74,8 +74,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   localStorage.removeItem(KEY);
 };
 
+  const role = user?.role ?? "guest";
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!user && !!token, isLoading}}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        role,
+        login,
+        logout,
+        isAuthenticated: !!user && !!token,
+        isLoading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
