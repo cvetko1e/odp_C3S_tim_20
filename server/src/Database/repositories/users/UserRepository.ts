@@ -12,7 +12,18 @@ export class UserRepository implements IUserRepository {
   ) {}
 
   private map(r: RowDataPacket): User {
-    return new User(r.id, r.username, r.email, r.role as UserRole, r.passwordHash, r.isActive);
+    return new User(
+      r.id,
+      r.username,
+      r.email,
+      r.role as UserRole,
+      r.passwordHash,
+      r.isActive,
+      r.firstName,
+      r.lastName,
+      r.bio ?? null,
+      r.profileImage ?? null,
+    );
   }
 
   public async create(user: User): Promise<User> {
@@ -20,11 +31,23 @@ export class UserRepository implements IUserRepository {
     if (!res) return new User();
     try {
       const [result] = await res.conn.execute<ResultSetHeader>(
-        `INSERT INTO users (username, firstName, lastName, email, role, passwordHash) VALUES (?, ?, ?, ?, ?, ?)`,
-        [user.username, user.username, user.username, user.email, user.role, user.passwordHash]
+        `INSERT INTO users (username, firstName, lastName, email, role, passwordHash, bio, profileImage)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [user.username, user.firstName, user.lastName, user.email, user.role, user.passwordHash, user.bio, user.profileImage]
       );
       if (result.insertId === 0) return new User();
-      return new User(result.insertId, user.username, user.email, user.role, user.passwordHash);
+      return new User(
+        result.insertId,
+        user.username,
+        user.email,
+        user.role,
+        user.passwordHash,
+        1,
+        user.firstName,
+        user.lastName,
+        user.bio,
+        user.profileImage,
+      );
     } catch (err) {
       this.logger.error("UserRepository", "create failed", err);
       return new User();

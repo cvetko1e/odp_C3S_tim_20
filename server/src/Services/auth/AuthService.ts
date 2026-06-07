@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { IAuthService } from "../../Domain/services/auth/IAuthService";
+import { IAuthService, RegisterInput } from "../../Domain/services/auth/IAuthService";
 import { IUserRepository } from "../../Domain/repositories/users/IUserRepository";
 import { AuthUserDto } from "../../Domain/DTOs/auth/AuthUserDto";
 import { UserRole } from "../../Domain/enums/UserRole";
@@ -18,15 +18,26 @@ export class AuthService implements IAuthService {
     return new AuthUserDto(user.id, user.username, user.role);
   }
 
-  async register(username: string, email: string, role: string, password: string): Promise<AuthUserDto> {
-    const byName = await this.userRepo.findByUsername(username);
+  async register(input: RegisterInput): Promise<AuthUserDto> {
+    const byName = await this.userRepo.findByUsername(input.username);
     if (byName.id !== 0) return new AuthUserDto();
-    const byEmail = await this.userRepo.findByEmail(email);
+    const byEmail = await this.userRepo.findByEmail(input.email);
     if (byEmail.id !== 0) return new AuthUserDto();
-    const hash = await bcrypt.hash(password, this.saltRounds).catch(() => "");
+    const hash = await bcrypt.hash(input.password, this.saltRounds).catch(() => "");
     if (!hash) return new AuthUserDto();
-    const userRole = role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.USER;
-    const created = await this.userRepo.create(new User(0, username, email, userRole, hash));
+    const userRole = input.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.USER;
+    const created = await this.userRepo.create(new User(
+      0,
+      input.username,
+      input.email,
+      userRole,
+      hash,
+      1,
+      input.firstName,
+      input.lastName,
+      input.bio,
+      input.profileImage,
+    ));
     if (created.id === 0) return new AuthUserDto();
     return new AuthUserDto(created.id, created.username, created.role);
   }
