@@ -92,7 +92,7 @@ export default function CommunityDetailsPage() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#502e2e]">
       <PageHeader eyebrow="Community" title={community.name || "Community Details"} />
       {id === 0 && <ErrorBox message="Invalid community id" />}
       {id !== 0 && error && <ErrorBox message={error} />}

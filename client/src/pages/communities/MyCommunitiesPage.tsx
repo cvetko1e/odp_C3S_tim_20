@@ -49,7 +49,7 @@ export default function MyCommunitiesPage() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#502e2e]">
       <PageHeader eyebrow="Community" title="My Communities" />
       {!token && <ErrorBox message="Missing auth token" />}
       {token && error && <ErrorBox message={error} />}

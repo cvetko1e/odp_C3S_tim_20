@@ -21,7 +21,7 @@ export function LoginForm({ authApi }: { authApi: IAuthAPIService }) {
     <div className="w-full max-w-sm">
       <div className="text-center mb-10">
         <div className="w-12 h-12 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center mx-auto mb-4">
-          <span className="text-white/60 text-lg">◈</span>
+          <span className="text-white/60 text-lg">⬡</span>
         </div>
         <h1 className="text-xl font-semibold text-white">Welcome back</h1>
         <p className="text-sm text-white/35 mt-1">Sign in to your account</p>

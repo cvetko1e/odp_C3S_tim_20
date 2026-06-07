@@ -12,7 +12,7 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#502e2e]">
       <PageHeader eyebrow="Admin" title="Dashboard" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
         {tiles.map((t) => (

@@ -30,7 +30,7 @@ export default function CreateCommunityPage() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#502e2e]">
       <PageHeader eyebrow="Community" title="Create Community" />
       {error && <ErrorBox message={error} />}
       <CommunityForm submitLabel="Create" onSubmit={handleSubmit} />

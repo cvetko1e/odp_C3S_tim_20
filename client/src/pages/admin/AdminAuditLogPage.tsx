@@ -38,7 +38,7 @@ export default function AdminAuditLogPage() {
   }, [page]);
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#502e2e]">
       <PageHeader eyebrow="Admin" title="Audit Log" />
       {error && <div className="mb-4"><ErrorBox message={error} /></div>}
 

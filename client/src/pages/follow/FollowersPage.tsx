@@ -27,7 +27,7 @@ export const FollowersPage: React.FC = () => {
   }, [userId]);
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
+    <div className="max-w-2xl mx-auto py-8 px-4 space-y-6 bg-[#502e2e]">
       <button
         onClick={() => navigate(-1)}
         className="text-xs text-white/30 hover:text-white/50 transition-colors"

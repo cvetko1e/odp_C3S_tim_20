@@ -32,10 +32,10 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
 
       {/* User routes */}
-       <Route path="/dashboard" element={<ProtectedRoute requiredRole="user"><UserDashboard /></ProtectedRoute>} />
+       < Route path="/dashboard" element={<ProtectedRoute requiredRole="user"><UserDashboard /></ProtectedRoute>} />
        <Route path="/my-communities" element={<ProtectedRoute requiredRole="user"><MyCommunitiesPage /></ProtectedRoute>} />
       <Route path="/communities/create" element={<ProtectedRoute requiredRole="user"><CreateCommunityPage /></ProtectedRoute>} />
-          <Route path="/communities/:id" element={<ProtectedRoute requiredRole="user"><CommunityDetailsPage /></ProtectedRoute>} />
+          <Route path="/communities/:id" element={<ProtectedRoute requiredRole="user"><CommunityDetailsPage /></ProtectedRoute>} /> 
 
           {/* Post routes */}
           <Route path="/posts/:id" element={<ProtectedRoute requiredRole="user"><PostDetailsPage /></ProtectedRoute>} />
@@ -50,7 +50,7 @@ export default function App() {
 
 
       {/* Admin routes */}
-          <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboardPage /></ProtectedRoute>} />
+         <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboardPage /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><AdminUsersPage /></ProtectedRoute>} />
           <Route path="/admin/communities" element={<ProtectedRoute requiredRole="admin"><AdminCommunitiesPage /></ProtectedRoute>} />
           <Route path="/admin/tags" element={<ProtectedRoute requiredRole="admin"><AdminTagsPage /></ProtectedRoute>} />

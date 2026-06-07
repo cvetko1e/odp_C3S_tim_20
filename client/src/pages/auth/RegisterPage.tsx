@@ -14,7 +14,7 @@ export default function RegisterPage() {
   }, [isAuthenticated, user, navigate]);
 
   return (
-    <main className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
+    <main className="min-h-screen bg-[#502e2e] flex items-center justify-center px-4">
       <RegisterForm authApi={authApi} />
     </main>
   );

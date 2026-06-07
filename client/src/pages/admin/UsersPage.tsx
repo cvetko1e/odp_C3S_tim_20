@@ -44,7 +44,7 @@ export default function UsersPage() {
     };
 
     return (
-        <div>
+        <div className="min-h-screen bg-[#502e2e]">
             <PageHeader eyebrow="Admin" title="Users" />
             {error && <div className="mb-4"><ErrorBox message={error} /></div>}
             {success && <div className="mb-4"><SuccessBox message={success} /></div>}

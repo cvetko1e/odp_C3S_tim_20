@@ -64,7 +64,7 @@ export default function CommunitiesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#080808] text-white">
+    <main className="min-h-screen bg-[#502e2e] text-white">
       <div className="max-w-5xl mx-auto px-6 py-8">
         <PageHeader eyebrow="Community" title="Communities" />
         {error && <ErrorBox message={error} />}
