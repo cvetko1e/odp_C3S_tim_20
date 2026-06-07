@@ -129,7 +129,7 @@ export class CommunityRepository implements ICommunityRepository {
   }
 
   public async getByUserId(userId: number): Promise<CommunityDto[]> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<CommunityRow[]>(
@@ -241,7 +241,7 @@ export class CommunityRepository implements ICommunityRepository {
   }
 
   public async isMember(communityId: number, userId: number): Promise<boolean> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return false;
     try {
       const [rows] = await res.conn.execute<CountRow[]>(
@@ -260,7 +260,7 @@ export class CommunityRepository implements ICommunityRepository {
   }
 
   public async isModerator(communityId: number, userId: number): Promise<boolean> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return false;
     try {
       const [rows] = await res.conn.execute<CountRow[]>(
@@ -325,7 +325,7 @@ export class CommunityRepository implements ICommunityRepository {
   }
 
   public async getMembers(communityId: number): Promise<CommunityMemberDto[]> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<CommunityMemberRow[]>(
@@ -402,7 +402,7 @@ export class CommunityRepository implements ICommunityRepository {
   }
 
   public async getCommunityType(communityId: number): Promise<CommunityType | ""> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return "";
     try {
       const [rows] = await res.conn.execute<CommunityTypeRow[]>(

@@ -64,6 +64,10 @@ export class DbManager {
         return this.router.getReadConnection(this.master, this.slaves);
     }
 
+    public async getPrimaryReadConnection(): Promise<{ conn: PoolConnection; nodeName: string } | null> {
+        return this.router.getWriteConnection(this.master);
+    }
+
     // ── Health Status ─────────────────────────────────────────────
 
     public getHealthStatus(): HealthStatus {

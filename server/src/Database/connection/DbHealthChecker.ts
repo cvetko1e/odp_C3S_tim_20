@@ -1,7 +1,7 @@
-import { PoolConnection } from "mysql2/promise";
+ï»¿import { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { DbNode } from "./DbNode";
 import { NodeStatus } from "../../Domain/enums/NodeStatus";
-import { HEALTH_CHECK_TIMEOUT, HEALTH_CHECK_INTERVAL_MS } from "../../Domain/constants/Constants";
+import { HEALTH_CHECK_TIMEOUT, HEALTH_CHECK_INTERVAL_MS, REPLICATION_LAG_DEGRADED_SECONDS } from "../../Domain/constants/Constants";
 import { ILoggerService } from "../../Domain/services/logger/ILoggerService";
 
 export interface NodeInfo {
@@ -9,6 +9,15 @@ export interface NodeInfo {
     pool: { getConnection(): Promise<PoolConnection> };
     node: DbNode;
 }
+
+type ReplicaStatusRow = RowDataPacket & {
+    Replica_IO_Running?: string;
+    Replica_SQL_Running?: string;
+    Seconds_Behind_Source?: number | null;
+    Slave_IO_Running?: string;
+    Slave_SQL_Running?: string;
+    Seconds_Behind_Master?: number | null;
+};
 
 export class DbHealthChecker {
     private healthTimer: NodeJS.Timeout | null = null;
@@ -24,6 +33,11 @@ export class DbHealthChecker {
             const ms = Date.now() - start;
             info.node.responseTimeMs = ms;
             info.node.status = ms > HEALTH_CHECK_TIMEOUT ? NodeStatus.DEGRADED : NodeStatus.HEALTHY;
+
+            if (info.node.role === "slave") {
+                await this.checkReplicaStatus(info, conn);
+            }
+
             info.node.successfulQueries++;
         } catch {
             info.node.status = NodeStatus.OFFLINE;
@@ -33,6 +47,31 @@ export class DbHealthChecker {
         } finally {
             if (conn) conn.release();
             info.node.lastCheck = new Date();
+        }
+    }
+
+    private async checkReplicaStatus(info: NodeInfo, conn: PoolConnection): Promise<void> {
+        const [rows] = await conn.query<ReplicaStatusRow[]>("SHOW REPLICA STATUS");
+        const status = rows[0];
+
+        if (!status) {
+            info.node.status = NodeStatus.OFFLINE;
+            this.logger.warn("DB", `Slave ${info.name} has no replica status`);
+            return;
+        }
+
+        const ioRunning = status.Replica_IO_Running ?? status.Slave_IO_Running;
+        const sqlRunning = status.Replica_SQL_Running ?? status.Slave_SQL_Running;
+        const lag = status.Seconds_Behind_Source ?? status.Seconds_Behind_Master;
+
+        if (ioRunning !== "Yes" || sqlRunning !== "Yes") {
+            info.node.status = NodeStatus.OFFLINE;
+            this.logger.warn("DB", `Slave ${info.name} replication is not running`);
+            return;
+        }
+
+        if (lag === null || lag === undefined || lag > REPLICATION_LAG_DEGRADED_SECONDS) {
+            info.node.status = NodeStatus.DEGRADED;
         }
     }
 
@@ -52,7 +91,7 @@ export class DbHealthChecker {
             () => void this.runHealthCheck(master, slaves),
             HEALTH_CHECK_INTERVAL_MS,
         );
-        this.logger.info("DB", `Health check started — interval ${HEALTH_CHECK_INTERVAL_MS}ms`);
+        this.logger.info("DB", `Health check started - interval ${HEALTH_CHECK_INTERVAL_MS}ms`);
     }
 
     public async init(master: NodeInfo, slaves: NodeInfo[]): Promise<void> {
