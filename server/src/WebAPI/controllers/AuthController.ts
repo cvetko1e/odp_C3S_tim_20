@@ -35,10 +35,27 @@ export class AuthController {
   }
 
   private async register(req: Request, res: Response): Promise<void> {
-    const { username, email, password, role } = req.body as { username?: string; email?: string; password?: string; role?: string };
-    const v: ValidationResult = validateRegister(username ?? "", email ?? "", password ?? "");
+    const body = req.body as {
+      username?: string;
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      password?: string;
+      role?: string;
+      bio?: string | null;
+      profileImage?: string | null;
+    };
+    const username = typeof body.username === "string" ? body.username.trim() : "";
+    const firstName = typeof body.firstName === "string" ? body.firstName.trim() : "";
+    const lastName = typeof body.lastName === "string" ? body.lastName.trim() : "";
+    const email = typeof body.email === "string" ? body.email.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
+    const role = typeof body.role === "string" ? body.role : "user";
+    const bio = typeof body.bio === "string" && body.bio.trim() !== "" ? body.bio.trim() : null;
+    const profileImage = typeof body.profileImage === "string" && body.profileImage.trim() !== "" ? body.profileImage : null;
+    const v: ValidationResult = validateRegister(username, firstName, lastName, email, password, bio, profileImage);
     if (!v.valid) { res.status(400).json({ success: false, message: v.message }); return; }
-    const result = await this.authService.register(username!, email!, role ?? "user", password!);
+    const result = await this.authService.register({ username, firstName, lastName, email, password, role, bio, profileImage });
     if (result.id === 0) { res.status(409).json({ success: false, message: "Username or email already taken" }); return; }
     const token = jwt.sign(
       { id: result.id, username: result.username, role: result.role },

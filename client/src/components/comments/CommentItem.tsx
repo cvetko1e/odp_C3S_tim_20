@@ -26,8 +26,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [loading, setLoading] = useState(false);
 
   const isOwn = comment.authorId === currentUserId;
+  const isAuthenticated = currentUserId !== 0;
   const isDeleted = deleted || comment.isDeleted === 1;
-  const canReply = depth < 1 && !isDeleted;
+  const canReply = isAuthenticated && depth < 1 && !isDeleted;
 
   const handleLike = async () => {
     if (isDeleted) return;
@@ -117,7 +118,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         )}
 
         {/* Actions */}
-        {!isDeleted && !editing && (
+        {isAuthenticated && !isDeleted && !editing && (
           <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/6">
             <button
               onClick={handleLike}

@@ -9,7 +9,7 @@ import { emptyPost, type Post } from "../../types/posts/Post";
 export const PostDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { token, user } = useAuth();
+  const { token, user, isAuthenticated } = useAuth();
 
   const [post, setPost] = useState<Post>(emptyPost);
   const [isLiked, setIsLiked] = useState(false);
@@ -18,9 +18,9 @@ export const PostDetailsPage: React.FC = () => {
   const postId = Number.parseInt(id || "0", 10);
 
   useEffect(() => {
-    if (!postId || !token) return;
+    if (!postId) return;
 
-    postApi.getPostById(postId, token).then((data) => {
+    postApi.getPostById(postId, token ?? undefined).then((data) => {
       setPost(data);
       setIsLiked(false);
       setLoading(false);
@@ -117,18 +117,20 @@ export const PostDetailsPage: React.FC = () => {
         )}
 
         <div className="pt-4 border-t border-gray-100 flex items-center gap-4">
-          <LikeButton
-            likesCount={post.likesCount}
-            isLiked={isLiked}
-            onLikeToggle={handleLikeToggle}
-            disabled={isAuthor}
-          />
+          {isAuthenticated ? (
+            <LikeButton
+              likesCount={post.likesCount}
+              isLiked={isLiked}
+              onLikeToggle={handleLikeToggle}
+              disabled={isAuthor}
+            />
+          ) : (
+            <span className="text-sm text-gray-500">{post.likesCount} lajkova</span>
+          )}
         </div>
       </div>
       
-          {user && (
-              <CommentList postId={postId} currentUserId={user.id} />
-          )}
+          <CommentList postId={postId} currentUserId={user?.id ?? null} />
       </div>
 
   );

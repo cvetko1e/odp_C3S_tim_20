@@ -18,8 +18,8 @@ export class PostController {
 
   private setupRoutes(): void {
     this.router.get('/posts/feed',                    authenticate, this.getFeed);
-    this.router.get('/posts/community/:communityId',  authenticate, this.getByCommunity);
-    this.router.get('/posts/:id',                     authenticate, this.getById);
+    this.router.get('/posts/community/:communityId',  this.getByCommunity);
+    this.router.get('/posts/:id',                     this.getById);
     this.router.post('/posts',                        authenticate, this.create);
     this.router.put('/posts/:id',                     authenticate, this.update);
     this.router.delete('/posts/:id',                  authenticate, this.delete);

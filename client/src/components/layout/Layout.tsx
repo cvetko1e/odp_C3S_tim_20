@@ -64,14 +64,14 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
           </div>
           <button
-            onClick={() => {
-              logout();
-              navigate("/login");
-            }}
-            className="text-xs text-white/20 hover:text-white/50 transition-colors w-full text-left"
-          >
-            Sign out
-          </button>
+            onClick={async () => {
+            await logout();
+            navigate("/login");
+           }}
+           className="text-xs text-white/20 hover:text-white/50 transition-colors w-full text-left"
+           >
+           Sign out
+        </button>
         </div>
       </aside>
 

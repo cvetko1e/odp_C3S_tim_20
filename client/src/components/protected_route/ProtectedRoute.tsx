@@ -16,14 +16,26 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole:
 
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
 
-  if (user?.role !== requiredRole) return (
+  if (
+  user?.role !== requiredRole &&
+  user?.role !== "admin"
+) {
+  return (
     <div className="min-h-screen bg-[#080808] flex items-center justify-center">
       <div className="border border-red-500/20 bg-red-500/10 rounded-2xl p-10 text-center max-w-sm">
-        <p className="text-red-400 text-sm mb-4">You don't have permission to access this page.</p>
-        <button onClick={logout} className="text-xs text-white/40 hover:text-white/60 transition-colors underline">Sign out</button>
+        <p className="text-red-400 text-sm mb-4">
+          You don't have permission to access this page.
+        </p>
+        <button
+          onClick={logout}
+          className="text-xs text-white/40 hover:text-white/60 transition-colors underline"
+        >
+          Sign out
+        </button>
       </div>
     </div>
   );
+}
 
   return <Layout>{children}</Layout>;
 };

@@ -12,7 +12,20 @@ export class UserRepository implements IUserRepository {
   ) {}
 
   private map(r: RowDataPacket): User {
-    return new User(r.id, r.username, r.email, r.role as UserRole, r.passwordHash, r.isActive);
+    return new User(
+      r.id,
+      r.username,
+      r.email,
+      r.role as UserRole,
+      r.passwordHash,
+      r.isActive,
+      r.firstName,
+      r.lastName,
+      r.bio ?? null,
+      r.profileImage ?? null,
+      Number(r.followersCount ?? 0),
+      Number(r.followingCount ?? 0),
+    );
   }
 
   public async create(user: User): Promise<User> {
@@ -20,11 +33,23 @@ export class UserRepository implements IUserRepository {
     if (!res) return new User();
     try {
       const [result] = await res.conn.execute<ResultSetHeader>(
-        `INSERT INTO users (username, firstName, lastName, email, role, passwordHash) VALUES (?, ?, ?, ?, ?, ?)`,
-        [user.username, user.username, user.username, user.email, user.role, user.passwordHash]
+        `INSERT INTO users (username, firstName, lastName, email, role, passwordHash, bio, profileImage)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [user.username, user.firstName, user.lastName, user.email, user.role, user.passwordHash, user.bio, user.profileImage]
       );
       if (result.insertId === 0) return new User();
-      return new User(result.insertId, user.username, user.email, user.role, user.passwordHash);
+      return new User(
+        result.insertId,
+        user.username,
+        user.email,
+        user.role,
+        user.passwordHash,
+        1,
+        user.firstName,
+        user.lastName,
+        user.bio,
+        user.profileImage,
+      );
     } catch (err) {
       this.logger.error("UserRepository", "create failed", err);
       return new User();
@@ -35,7 +60,14 @@ export class UserRepository implements IUserRepository {
     const res = await this.db.getReadConnection();
     if (!res) return new User();
     try {
-      const [rows] = await res.conn.execute<RowDataPacket[]>(`SELECT * FROM users WHERE id = ?`, [id]);
+      const [rows] = await res.conn.execute<RowDataPacket[]>(
+        `SELECT u.*,
+                (SELECT COUNT(*) FROM user_follows WHERE followingId = u.id) AS followersCount,
+                (SELECT COUNT(*) FROM user_follows WHERE followerId = u.id) AS followingCount
+         FROM users u
+         WHERE u.id = ?`,
+        [id],
+      );
       return rows.length > 0 ? this.map(rows[0]) : new User();
     } catch (err) {
       this.logger.error("UserRepository", "findById failed", err);

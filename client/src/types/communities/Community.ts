@@ -2,6 +2,17 @@ export type CommunityType = "public" | "private";
 export type CommunityMemberRole = "moderator" | "member";
 export type CommunityMemberStatus = "active" | "pending" | "banned";
 
+export type CommunityMember = {
+  id: number;
+  username: string;
+  email: string;
+  role: "user" | "admin";
+  isActive: number;
+  memberRole: CommunityMemberRole;
+  memberStatus: CommunityMemberStatus;
+  joinedAt: string | null;
+};
+
 export type Community = {
   id: number;
   name: string;
