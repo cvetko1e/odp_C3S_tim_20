@@ -1,4 +1,4 @@
-import { PoolConnection } from "mysql2/promise";
+ï»¿import { PoolConnection } from "mysql2/promise";
 import { NodeStatus } from "../../Domain/enums/NodeStatus";
 import { ILoggerService } from "../../Domain/services/logger/ILoggerService";
 import { NodeInfo } from "./DbHealthChecker";
@@ -12,7 +12,7 @@ export class DbConnectionRouter {
         master: NodeInfo,
     ): Promise<{ conn: PoolConnection; nodeName: string } | null> {
         if (master.node.status === NodeStatus.OFFLINE) {
-            this.logger.error("DB", "Master is OFFLINE — write not possible");
+            this.logger.error("DB", "Master is OFFLINE - write not possible");
             return null;
         }
         try {
@@ -31,11 +31,14 @@ export class DbConnectionRouter {
         master: NodeInfo,
         slaves: NodeInfo[],
     ): Promise<{ conn: PoolConnection; nodeName: string } | null> {
-        const n = slaves.length;
+        const healthy = slaves.filter((s) => s.node.status === NodeStatus.HEALTHY);
+        const degraded = slaves.filter((s) => s.node.status === NodeStatus.DEGRADED);
+        const candidates = healthy.length > 0 ? healthy : degraded;
+        const n = candidates.length;
+
         for (let i = 0; i < n; i++) {
             const idx = (this.slaveRrIndex + i) % n;
-            const info = slaves[idx];
-            if (info.node.status === NodeStatus.OFFLINE) continue;
+            const info = candidates[idx];
             try {
                 const conn = await info.pool.getConnection();
                 this.slaveRrIndex = (idx + 1) % n;
@@ -48,10 +51,9 @@ export class DbConnectionRouter {
             }
         }
 
-        // Fallback to master
-        this.logger.warn("DB", "All slaves offline — falling back to master for read");
+        this.logger.warn("DB", "No usable slaves - falling back to master for read");
         if (master.node.status === NodeStatus.OFFLINE) {
-            this.logger.error("DB", "Master also offline — read not possible");
+            this.logger.error("DB", "Master also offline - read not possible");
             return null;
         }
         try {

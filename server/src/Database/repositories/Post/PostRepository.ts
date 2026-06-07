@@ -120,7 +120,7 @@ export class PostRepository implements IPostRepository {
   }
 
   public async getFeed(userId: number): Promise<Post[]> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<PostRow[]>(
@@ -220,7 +220,7 @@ export class PostRepository implements IPostRepository {
   }
 
   public async hasUserLikedPost(postId: number, userId: number): Promise<boolean> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return false;
     try {
       const [rows] = await res.conn.execute<CountRow[]>(

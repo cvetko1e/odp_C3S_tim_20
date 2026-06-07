@@ -57,7 +57,7 @@ export class UserRepository implements IUserRepository {
   }
 
   public async findById(id: number): Promise<User> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return new User();
     try {
       const [rows] = await res.conn.execute<RowDataPacket[]>(
@@ -76,7 +76,7 @@ export class UserRepository implements IUserRepository {
   }
 
   public async findByUsername(username: string): Promise<User> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return new User();
     try {
       const [rows] = await res.conn.execute<RowDataPacket[]>(`SELECT * FROM users WHERE username = ?`, [username]);
@@ -88,7 +88,7 @@ export class UserRepository implements IUserRepository {
   }
 
   public async findByEmail(email: string): Promise<User> {
-    const res = await this.db.getReadConnection();
+    const res = await this.db.getPrimaryReadConnection();
     if (!res) return new User();
     try {
       const [rows] = await res.conn.execute<RowDataPacket[]>(`SELECT * FROM users WHERE email = ?`, [email]);

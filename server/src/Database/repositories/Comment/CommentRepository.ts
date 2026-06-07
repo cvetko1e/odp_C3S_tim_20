@@ -114,7 +114,7 @@ export class CommentRepository implements ICommentRepository {
   }
 
   public async findById(id: number): Promise<CommentDto> {
-    const read = await this.db.getReadConnection();
+    const read = await this.db.getPrimaryReadConnection();
     if (!read) {
       return new CommentDto();
     }
@@ -200,7 +200,7 @@ export class CommentRepository implements ICommentRepository {
   }
 
   public async hasUserLikedComment(commentId: number, userId: number): Promise<boolean> {
-    const read = await this.db.getReadConnection();
+    const read = await this.db.getPrimaryReadConnection();
     if (!read) {
       return false;
     }
@@ -264,7 +264,7 @@ export class CommentRepository implements ICommentRepository {
   }
 
   public async getDepth(commentId: number): Promise<number> {
-    const read = await this.db.getReadConnection();
+    const read = await this.db.getPrimaryReadConnection();
     if (!read) {
       return 0;
     }
