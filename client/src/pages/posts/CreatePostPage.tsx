@@ -51,9 +51,9 @@ export const CreatePostPage: React.FC = () => {
   if (loading) return <div className="text-center py-10">Ucitavanje...</div>;
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4 bg-[#502e2e]">
+    <div className="mx-auto max-w-2xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Kreiraj novu objavu</h1>
-      <div className="bg-[#3a1f1f] p-6 rounded-xl">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <PostForm 
         availableTags={tags}
         onSubmit={handleSubmit}

@@ -1,9 +1,11 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/protected_route/ProtectedRoute";
+import { Layout } from "./components/layout/Layout";
 
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import NotFoundPage from "./pages/not_found/NotFoundPage";
+import ForbiddenPage from "./pages/not_found/ForbiddenPage";
 
 import UserDashboard from "./pages/user/UserDashboard";
 import { UserProfilePage } from "./pages/user/UserProfilePage";
@@ -34,10 +36,10 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
 
       {/* Public / guest routes */}
-      <Route path="/communities" element={<CommunitiesPage />} />
-      <Route path="/communities/:id" element={<CommunityDetailsPage />} />
-      <Route path="/posts/:id" element={<PostDetailsPage />} />
-      <Route path="/users/:id" element={<UserProfilePage />} />
+      <Route path="/communities" element={<Layout><CommunitiesPage /></Layout>} />
+      <Route path="/communities/:id" element={<Layout><CommunityDetailsPage /></Layout>} />
+      <Route path="/posts/:id" element={<Layout><PostDetailsPage /></Layout>} />
+      <Route path="/users/:id" element={<Layout><UserProfilePage /></Layout>} />
 
       {/* User routes */}
       <Route path="/dashboard" element={<ProtectedRoute requiredRole="user"><UserDashboard /></ProtectedRoute>} />
@@ -59,6 +61,7 @@ export default function App() {
       {/* Fallback */}
       <Route path="/" element={<Navigate to="/communities" replace />} />
       <Route path="/404" element={<NotFoundPage />} />
+      <Route path="/403" element={<ForbiddenPage />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );

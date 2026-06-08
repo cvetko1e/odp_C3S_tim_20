@@ -52,7 +52,7 @@ export const EditPostPage: React.FC = () => {
   if (post.id === 0) return <div className="text-center py-10 text-red-500">Objava nije pronadjena.</div>;
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4 bg-[#502e2e]">
+    <div className="mx-auto max-w-2xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Izmeni objavu</h1>
       <PostForm
         initialTitle={post.title}

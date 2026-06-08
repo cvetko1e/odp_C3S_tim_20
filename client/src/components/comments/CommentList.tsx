@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { commentsApi } from "../../api_services/comments/CommentsAPIService";
 import { CommentItem } from "./CommentItem";
-import { Spinner, Empty, ErrorBox } from "../ui/UI";
+import { Button, Card, Spinner, Empty, ErrorBox, TextArea } from "../ui/UI";
 import type { CommentDto } from "../../models/comments/CommentTypes";
 
 interface CommentListProps {
@@ -16,7 +16,7 @@ export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId 
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     const res = await commentsApi.getByPost(postId);
     if (res.success && res.data) {
@@ -26,9 +26,12 @@ export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId 
       setError(res.message);
     }
     setLoading(false);
-  };
+  }, [postId]);
 
-  useEffect(() => { void load(); }, [postId]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   const handleSubmit = async () => {
     if (!content.trim() || currentUserId === null) return;
@@ -43,34 +46,33 @@ export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId 
 
   return (
     <div className="space-y-4">
-      <h2 className="text-sm font-mono uppercase tracking-widest text-white/25">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
         Komentari ({comments.length})
       </h2>
 
       {currentUserId !== null ? (
-        <div className="bg-white/3 border border-white/6 rounded-xl p-4 space-y-3">
-          <textarea
+        <Card className="space-y-3 p-4">
+          <TextArea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Napisite komentar..."
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 resize-none focus:outline-none focus:border-white/20"
             rows={3}
             maxLength={2000}
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-white/20">{content.length}/2000</span>
-            <button
+            <span className="text-xs text-gray-400">{content.length}/2000</span>
+            <Button
               onClick={handleSubmit}
               disabled={submitting || !content.trim()}
-              className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-lg hover:bg-sky-500/30 disabled:opacity-50 transition-colors"
+              className="gap-2 px-4 py-1.5 text-xs"
             >
               {submitting && <Spinner size={12} />}
               Objavi
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       ) : (
-        <p className="text-sm text-white/35">Prijavite se da biste komentarisali.</p>
+        <p className="text-sm text-gray-500">Prijavite se da biste komentarisali.</p>
       )}
 
       {error && <ErrorBox message={error} />}

@@ -44,8 +44,8 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
       disabled={loading}
       className={`flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 ${
         isFollowing
-          ? "bg-white/5 text-white/40 border-white/10 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20"
-          : "bg-sky-500/20 text-sky-400 border-sky-500/20 hover:bg-sky-500/30"
+          ? "border-gray-300 bg-white text-gray-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+          : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
       }`}
     >
       {loading && <Spinner size={12} />}

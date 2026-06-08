@@ -1,83 +1,141 @@
-import { type ReactNode } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useState, type ReactNode } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/auth/useAuthHook";
+import { Badge, Button, RoleBadge } from "../ui/UI";
+
+const publicNav = [
+  { to: "/communities", label: "Communities" },
+];
 
 const userNav = [
-  { to: "/dashboard", label: "Dashboard", icon: "*" },
-  { to: "/communities", label: "Communities", icon: "o" },
-  { to: "/my-communities", label: "My Communities", icon: "@" },
-  { to: "/communities/create", label: "Create Community", icon: "+" },
+  { to: "/dashboard", label: "Dashboard" },
+  { to: "/my-communities", label: "My Communities" },
+  { to: "/communities/create", label: "Create Community" },
 ];
 
 const adminNav = [
-  { to: "/admin", label: "Dashboard", icon: "*" },
-  { to: "/admin/users", label: "Users", icon: "u" },
-  { to: "/admin/communities", label: "Admin Communities", icon: "@" },
-  { to: "/communities", label: "Communities", icon: "o" },
+  { to: "/admin", label: "Admin Dashboard" },
+  { to: "/admin/users", label: "Users" },
+  { to: "/admin/communities", label: "Communities" },
+  { to: "/admin/tags", label: "Tags" },
+  { to: "/admin/audit", label: "Audit Log" },
+  { to: "/admin/health", label: "Health" },
 ];
 
+function NavSection({ title, items, close }: { title: string; items: { to: string; label: string }[]; close: () => void }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="space-y-1">
+      <p className="px-3 pb-2 pt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">{title}</p>
+      {items.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end
+          onClick={close}
+          className={({ isActive }) =>
+            `flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              isActive ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+            }`
+          }
+        >
+          {item.label}
+        </NavLink>
+      ))}
+    </div>
+  );
+}
+
 export function Layout({ children }: { children: ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const nav = user?.role === "admin" ? adminNav : userNav;
+  const [open, setOpen] = useState(false);
+
+  const close = () => setOpen(false);
+
+  const sidebar = (
+    <aside className="flex h-full w-64 flex-col border-r border-gray-200 bg-white">
+      <div className="flex h-16 items-center gap-3 border-b border-gray-200 px-5">
+        <Link to="/communities" onClick={close} className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">PN</div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">PulseNet</p>
+            <p className="text-xs text-gray-500">Admin dashboard</p>
+          </div>
+        </Link>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <NavSection title="Public" items={publicNav} close={close} />
+        {isAuthenticated && <NavSection title="User" items={userNav} close={close} />}
+        {user?.role === "admin" && <NavSection title="Admin" items={adminNav} close={close} />}
+      </nav>
+
+      <div className="border-t border-gray-200 p-4">
+        {isAuthenticated && user ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-700">
+                {user.username.slice(0, 1).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-gray-900">{user.username}</p>
+                <RoleBadge role={user.role} />
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={async () => {
+                await logout();
+                navigate("/login");
+              }}
+            >
+              Logout
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="secondary" onClick={() => navigate("/login")}>Login</Button>
+            <Button onClick={() => navigate("/register")}>Register</Button>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
 
   return (
-    <div className="flex min-h-screen bg-[#080808]">
-      <aside className="w-56 shrink-0 border-r border-white/5 flex flex-col bg-[#0d0d0d]">
-        <div className="px-5 h-16 flex items-center border-b border-white/5 gap-3">
-          <div className="w-7 h-7 rounded-lg bg-white/8 border border-white/12 flex items-center justify-center">
-            <span className="text-white/50 text-xs">o</span>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-white tracking-tight">PulseNet</p>
-            <p className="text-[10px] text-white/25 uppercase tracking-widest">{user?.role}</p>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="fixed inset-y-0 left-0 z-30 hidden lg:block">{sidebar}</div>
+
+      {open && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <button className="absolute inset-0 bg-gray-900/40" aria-label="Close sidebar" onClick={close} />
+          <div className="relative h-full">{sidebar}</div>
         </div>
+      )}
 
-        <nav className="flex-1 py-4 px-3 flex flex-col gap-0.5">
-          {nav.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
-                  isActive
-                    ? "bg-white/8 text-white border border-white/12"
-                    : "text-white/35 hover:text-white/70 hover:bg-white/4 border border-transparent"
-                }`
-              }
-            >
-              <span className="text-base leading-none">{item.icon}</span>
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="border-t border-white/5 px-4 py-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-7 h-7 rounded-full bg-white/6 border border-white/10 flex items-center justify-center">
-              <span className="text-xs text-white/40 font-medium">{user?.username?.[0]?.toUpperCase()}</span>
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-white/70 truncate">{user?.username}</p>
-            </div>
+      <div className="lg:pl-64">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm sm:px-6">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" className="px-3 lg:hidden" onClick={() => setOpen(true)} aria-label="Open sidebar">Menu</Button>
+            <span className="text-sm font-medium text-gray-500">PulseNet control panel</span>
           </div>
-          <button
-            onClick={async () => {
-            await logout();
-            navigate("/login");
-           }}
-           className="text-xs text-white/20 hover:text-white/50 transition-colors w-full text-left"
-           >
-           Sign out
-        </button>
-        </div>
-      </aside>
-
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-5xl mx-auto px-8 py-8">{children}</div>
-      </main>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="hidden text-sm font-medium text-gray-700 sm:inline">{user.username}</span>
+                <RoleBadge role={user.role} />
+              </>
+            ) : (
+              <Badge tone="gray">guest</Badge>
+            )}
+          </div>
+        </header>
+        <main className="px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

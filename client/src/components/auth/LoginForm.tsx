@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/auth/useAuthHook";
 import type { IAuthAPIService } from "../../api_services/auth/IAuthAPIService";
+import { Button, Card, ErrorMessage, Input } from "../ui/UI";
+import { validateLogin } from "../../helpers/validators";
 
 export function LoginForm({ authApi }: { authApi: IAuthAPIService }) {
   const { login } = useAuth();
@@ -9,53 +12,55 @@ export function LoginForm({ authApi }: { authApi: IAuthAPIService }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); setError(""); setLoading(true);
-    const res = await authApi.login(username, password);
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+
+    const validation = validateLogin(username, password);
+    if (!validation.valid) {
+      setError(validation.message ?? "Invalid login input.");
+      return;
+    }
+
+    setLoading(true);
+    const response = await authApi.login(username.trim(), password);
     setLoading(false);
-    if (!res.success || !res.data) { setError(res.message ?? "Invalid credentials"); return; }
-    login(res.data);
+
+    if (!response.success || !response.data) {
+      setError(response.message ?? "Invalid credentials.");
+      return;
+    }
+
+    login(response.data);
   };
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="text-center mb-10">
-        <div className="w-12 h-12 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center mx-auto mb-4">
-          <span className="text-white/60 text-lg">⬡</span>
-        </div>
-        <h1 className="text-xl font-semibold text-white">Welcome back</h1>
-        <p className="text-sm text-white/35 mt-1">Sign in to your account</p>
+    <Card className="w-full max-w-md p-8">
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">PN</div>
+        <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
+        <p className="mt-1 text-sm text-gray-500">Sign in to PulseNet</p>
       </div>
 
-      {error && (
-        <div className="mb-5 bg-red-500/10 border border-red-500/20 text-red-300 text-sm px-4 py-3 rounded-xl">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-5"><ErrorMessage message={error} /></div>}
 
-      <form onSubmit={submit} className="flex flex-col gap-4">
+      <form onSubmit={submit} className="space-y-4">
         <div>
-          <label className="block text-xs text-white/40 mb-2 font-medium">Username</label>
-          <input type="text" value={username} onChange={e => setUsername(e.target.value)} required
-            className="w-full bg-white/4 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
-            placeholder="your_username" />
+          <label className="mb-2 block text-sm font-medium text-gray-700">Username</label>
+          <Input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="your_username" />
         </div>
         <div>
-          <label className="block text-xs text-white/40 mb-2 font-medium">Password</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-            className="w-full bg-white/4 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
-            placeholder="••••••••" />
+          <label className="mb-2 block text-sm font-medium text-gray-700">Password</label>
+          <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" />
         </div>
-        <button type="submit" disabled={loading}
-          className="mt-2 bg-white hover:bg-white/90 disabled:opacity-50 text-black font-semibold rounded-xl py-3 text-sm transition-colors">
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? "Signing in..." : "Sign in"}
+        </Button>
       </form>
 
-      <p className="text-center text-white/30 text-sm mt-6">
-        Don't have an account?{" "}
-        <a href="/register" className="text-white/60 hover:text-white transition-colors">Create one</a>
+      <p className="mt-6 text-center text-sm text-gray-500">
+        Do not have an account? <Link to="/register" className="font-medium text-blue-600 hover:text-blue-700">Create one</Link>
       </p>
-    </div>
+    </Card>
   );
 }

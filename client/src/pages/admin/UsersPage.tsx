@@ -44,7 +44,7 @@ export default function UsersPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#502e2e]">
+        <div>
             <PageHeader eyebrow="Admin" title="Users" />
             {error && <div className="mb-4"><ErrorBox message={error} /></div>}
             {success && <div className="mb-4"><SuccessBox message={success} /></div>}
@@ -56,13 +56,13 @@ export default function UsersPage() {
                     <TableHead columns={["ID", "Username", "Email", "Role", "Status", "Actions"]} />
                     <tbody>
                         {users.map((u) => (
-                            <tr key={u.id} className="border-t border-white/4 hover:bg-white/2 transition-colors">
-                                <td className="px-5 py-3.5 text-white/30 font-mono text-xs">{u.id}</td>
-                                <td className="px-5 py-3.5 text-white/80 text-sm">{u.username}</td>
-                                <td className="px-5 py-3.5 text-white/40 text-sm">{u.email}</td>
+                            <tr key={u.id} className="border-t border-gray-200 hover:bg-gray-50">
+                                <td className="px-5 py-3.5 font-mono text-xs text-gray-500">{u.id}</td>
+                                <td className="px-5 py-3.5 text-sm font-medium text-gray-900">{u.username}</td>
+                                <td className="px-5 py-3.5 text-sm text-gray-600">{u.email}</td>
                                 <td className="px-5 py-3.5"><RoleBadge role={u.role} /></td>
                                 <td className="px-5 py-3.5">
-                                    <span className={`text-xs ${u.isActive ? "text-emerald-400" : "text-white/20"}`}>
+                                    <span className={`text-xs font-medium ${u.isActive ? "text-green-700" : "text-gray-400"}`}>
                                         {u.isActive ? "Active" : "Inactive"}
                                     </span>
                                 </td>
@@ -71,7 +71,7 @@ export default function UsersPage() {
                                         <button
                                             onClick={() => handleRoleToggle(u)}
                                             disabled={loading === u.id}
-                                            className="px-2.5 py-1 text-xs border border-white/10 text-white/40 rounded-lg hover:border-amber-500/30 hover:text-amber-400 disabled:opacity-30 transition-colors"
+                                            className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30"
                                         >
                                             {u.role === "admin" ? "→ user" : "→ admin"}
                                         </button>
@@ -79,7 +79,7 @@ export default function UsersPage() {
                                             <button
                                                 onClick={() => handleDeactivate(u)}
                                                 disabled={loading === u.id}
-                                                className="px-2.5 py-1 text-xs border border-white/10 text-white/40 rounded-lg hover:border-red-500/30 hover:text-red-400 disabled:opacity-30 transition-colors"
+                                                className="rounded-lg border border-red-200 px-2.5 py-1 text-xs text-red-700 transition-colors hover:bg-red-50 disabled:opacity-30"
                                             >
                                                 Deactivate
                                             </button>

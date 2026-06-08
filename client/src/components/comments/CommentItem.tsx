@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import type { CommentDto } from "../../models/comments/CommentTypes";
 import { commentsApi } from "../../api_services/comments/CommentsAPIService";
+import { Button, Card, TextArea } from "../ui/UI";
 
 interface CommentItemProps {
   comment: CommentDto;
@@ -9,12 +10,7 @@ interface CommentItemProps {
   onReplyPosted: () => void;
 }
 
-export const CommentItem: React.FC<CommentItemProps> = ({
-  comment,
-  currentUserId,
-  depth = 0,
-  onReplyPosted,
-}) => {
+export const CommentItem: React.FC<CommentItemProps> = ({ comment, currentUserId, depth = 0, onReplyPosted }) => {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(comment.likesCount);
   const [replying, setReplying] = useState(false);
@@ -35,25 +31,25 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     if (liked) {
       await commentsApi.unlike(comment.id);
       setLiked(false);
-      setLikesCount((c) => c - 1);
+      setLikesCount((count) => count - 1);
     } else {
       await commentsApi.like(comment.id);
       setLiked(true);
-      setLikesCount((c) => c + 1);
+      setLikesCount((count) => count + 1);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Obrisati komentar?")) return;
-    const res = await commentsApi.remove(comment.id);
-    if (res.success) setDeleted(true);
+    if (!window.confirm("Delete comment?")) return;
+    const response = await commentsApi.remove(comment.id);
+    if (response.success) setDeleted(true);
   };
 
   const handleEdit = async () => {
     if (!editContent.trim()) return;
     setLoading(true);
-    const res = await commentsApi.update(comment.id, editContent.trim());
-    if (res.success) {
+    const response = await commentsApi.update(comment.id, editContent.trim());
+    if (response.success) {
       setDisplayContent(editContent.trim());
       setEditing(false);
     }
@@ -63,8 +59,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const handleReply = async () => {
     if (!replyContent.trim()) return;
     setLoading(true);
-    const res = await commentsApi.create(comment.postId, replyContent.trim(), comment.id);
-    if (res.success) {
+    const response = await commentsApi.create(comment.postId, replyContent.trim(), comment.id);
+    if (response.success) {
       setReplyContent("");
       setReplying(false);
       onReplyPosted();
@@ -73,134 +69,57 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   return (
-    <div className={`${depth > 0 ? "ml-8 border-l border-white/6 pl-4" : ""}`}>
-      <div className="bg-white/3 border border-white/6 rounded-xl p-4 mb-2">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-white/60">
-            @{comment.authorUsername ?? "korisnik"}
-          </span>
-          <span className="text-xs text-white/25">
-            {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ""}
-          </span>
+    <div className={depth > 0 ? "ml-6 border-l border-gray-200 pl-4" : ""}>
+      <Card className="mb-2 p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-xs font-semibold text-gray-700">@{comment.authorUsername ?? "korisnik"}</span>
+          <span className="text-xs text-gray-400">{comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ""}</span>
         </div>
 
-        {/* Content */}
         {isDeleted ? (
-          <p className="text-sm text-white/20 italic">[komentar obrisan]</p>
+          <p className="text-sm italic text-gray-400">[comment deleted]</p>
         ) : editing ? (
           <div className="space-y-2">
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 resize-none focus:outline-none focus:border-white/20"
-              rows={3}
-              maxLength={2000}
-            />
+            <TextArea value={editContent} onChange={(event) => setEditContent(event.target.value)} rows={3} maxLength={2000} />
             <div className="flex gap-2">
-              <button
-                onClick={handleEdit}
-                disabled={loading}
-                className="px-3 py-1 text-xs font-medium bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-lg hover:bg-sky-500/30 disabled:opacity-50 transition-colors"
-              >
-                Sačuvaj
-              </button>
-              <button
-                onClick={() => setEditing(false)}
-                className="px-3 py-1 text-xs text-white/30 hover:text-white/50 transition-colors"
-              >
-                Otkaži
-              </button>
+              <Button onClick={handleEdit} disabled={loading} className="px-3 py-1 text-xs">Save</Button>
+              <Button variant="ghost" onClick={() => setEditing(false)} className="px-3 py-1 text-xs">Cancel</Button>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-white/70 whitespace-pre-wrap">{displayContent}</p>
+          <p className="whitespace-pre-wrap text-sm text-gray-700">{displayContent}</p>
         )}
 
-        {/* Actions */}
         {isAuthenticated && !isDeleted && !editing && (
-          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/6">
-            <button
-              onClick={handleLike}
-              className={`flex items-center gap-1 text-xs transition-colors ${
-                liked ? "text-red-400" : "text-white/30 hover:text-white/50"
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-              </svg>
-              {likesCount}
+          <div className="mt-3 flex items-center gap-3 border-t border-gray-200 pt-3">
+            <button onClick={handleLike} className={`text-xs font-medium ${liked ? "text-red-600" : "text-gray-500 hover:text-gray-900"}`}>
+              {liked ? "Unlike" : "Like"} ({likesCount})
             </button>
-
-            {canReply && (
-              <button
-                onClick={() => setReplying((r) => !r)}
-                className="text-xs text-white/30 hover:text-white/50 transition-colors"
-              >
-                Odgovori
-              </button>
-            )}
-
+            {canReply && <button onClick={() => setReplying((value) => !value)} className="text-xs font-medium text-gray-500 hover:text-gray-900">Reply</button>}
             {isOwn && (
               <>
-                <button
-                  onClick={() => setEditing(true)}
-                  className="text-xs text-white/30 hover:text-white/50 transition-colors"
-                >
-                  Izmeni
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="text-xs text-red-400/50 hover:text-red-400 transition-colors"
-                >
-                  Obriši
-                </button>
+                <button onClick={() => setEditing(true)} className="text-xs font-medium text-gray-500 hover:text-gray-900">Edit</button>
+                <button onClick={handleDelete} className="text-xs font-medium text-red-600 hover:text-red-700">Delete</button>
               </>
             )}
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* Reply box */}
       {replying && (
-        <div className="ml-8 mb-3 space-y-2">
-          <textarea
-            value={replyContent}
-            onChange={(e) => setReplyContent(e.target.value)}
-            placeholder="Napišite odgovor..."
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 resize-none focus:outline-none focus:border-white/20"
-            rows={2}
-            maxLength={2000}
-          />
+        <div className="mb-3 ml-6 space-y-2">
+          <TextArea value={replyContent} onChange={(event) => setReplyContent(event.target.value)} placeholder="Write a reply..." rows={2} maxLength={2000} />
           <div className="flex gap-2">
-            <button
-              onClick={handleReply}
-              disabled={loading || !replyContent.trim()}
-              className="px-3 py-1 text-xs font-medium bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-lg hover:bg-sky-500/30 disabled:opacity-50 transition-colors"
-            >
-              Pošalji
-            </button>
-            <button
-              onClick={() => setReplying(false)}
-              className="px-3 py-1 text-xs text-white/30 hover:text-white/50 transition-colors"
-            >
-              Otkaži
-            </button>
+            <Button onClick={handleReply} disabled={loading || !replyContent.trim()} className="px-3 py-1 text-xs">Send</Button>
+            <Button variant="ghost" onClick={() => setReplying(false)} className="px-3 py-1 text-xs">Cancel</Button>
           </div>
         </div>
       )}
 
-      {/* Replies */}
       {comment.replies && comment.replies.length > 0 && (
         <div className="mb-2">
           {comment.replies.map((reply) => (
-            <CommentItem
-              key={reply.id}
-              comment={reply}
-              currentUserId={currentUserId}
-              depth={depth + 1}
-              onReplyPosted={onReplyPosted}
-            />
+            <CommentItem key={reply.id} comment={reply} currentUserId={currentUserId} depth={depth + 1} onReplyPosted={onReplyPosted} />
           ))}
         </div>
       )}

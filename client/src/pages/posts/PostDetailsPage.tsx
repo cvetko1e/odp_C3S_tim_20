@@ -62,7 +62,7 @@ export const PostDetailsPage: React.FC = () => {
   const canManage = isAuthor || user?.role === "admin";
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 space-y-6 bg-[#502e2e]">
+    <div className="mx-auto max-w-3xl space-y-6">
       <button
         onClick={() => navigate(-1)}
         className="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1"
