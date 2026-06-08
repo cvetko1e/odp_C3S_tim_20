@@ -25,6 +25,12 @@ export class CommentService implements ICommentService {
       if (parent.id === 0) {
         return { success: false, status: 404, message: "Parent comment not found", data: null };
       }
+      if (parent.postId !== postId) {
+        return { success: false, status: 400, message: "Parent comment must belong to the same post", data: null };
+      }
+      if (parent.parentId !== null) {
+        return { success: false, status: 400, message: "Replies are allowed only on root comments", data: null };
+      }
       if (parent.isDeleted) {
         return { success: false, status: 400, message: "Cannot reply to a deleted comment", data: null };
       }

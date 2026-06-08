@@ -72,7 +72,7 @@ export class FollowRepository implements IFollowRepository {
   }
 
   public async isFollowing(followerId: number, followingId: number): Promise<boolean> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return false;
     try {
       const [rows] = await res.conn.execute<CountRow[]>(
@@ -89,7 +89,7 @@ export class FollowRepository implements IFollowRepository {
   }
 
   public async getFollowers(userId: number): Promise<UserDto[]> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<UserRow[]>(
@@ -112,7 +112,7 @@ export class FollowRepository implements IFollowRepository {
   }
 
   public async getFollowing(userId: number): Promise<UserDto[]> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<UserRow[]>(
@@ -135,7 +135,7 @@ export class FollowRepository implements IFollowRepository {
   }
 
   public async getFollowerCount(userId: number): Promise<number> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return 0;
     try {
       const [rows] = await res.conn.execute<CountRow[]>(
@@ -152,7 +152,7 @@ export class FollowRepository implements IFollowRepository {
   }
 
   public async getFollowingCount(userId: number): Promise<number> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return 0;
     try {
       const [rows] = await res.conn.execute<CountRow[]>(
@@ -169,7 +169,7 @@ export class FollowRepository implements IFollowRepository {
   }
 
   public async searchUsers(query: string, requesterId: number): Promise<UserDto[]> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
       const like = `%${query}%`;

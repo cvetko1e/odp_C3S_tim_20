@@ -8,8 +8,10 @@ services:
     container_name: project_master
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
       MYSQL_DATABASE: pulsenet
+      MYSQL_REPLICATION_USER: ${MYSQL_REPLICATION_USER:?MYSQL_REPLICATION_USER is required}
+      MYSQL_REPLICATION_PASSWORD: ${MYSQL_REPLICATION_PASSWORD:?MYSQL_REPLICATION_PASSWORD is required}
     ports:
       - "3306:3306"
     volumes:
@@ -17,7 +19,7 @@ services:
     networks:
       - project_net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root1234}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 15
@@ -30,7 +32,7 @@ services:
     container_name: project_slave1
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
       MYSQL_DATABASE: pulsenet
     ports:
       - "3307:3306"
@@ -42,7 +44,7 @@ services:
       mysql-master:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root1234}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 15
@@ -55,7 +57,7 @@ services:
     container_name: project_slave2
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
       MYSQL_DATABASE: pulsenet
     ports:
       - "3308:3306"
@@ -67,7 +69,7 @@ services:
       mysql-master:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root1234}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 15
@@ -87,19 +89,19 @@ services:
       DB_MASTER_HOST: mysql-master
       DB_MASTER_PORT: 3306
       DB_MASTER_USER: root
-      DB_MASTER_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
+      DB_MASTER_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
       DB_MASTER_NAME: pulsenet
       DB_SLAVE1_HOST: mysql-slave1
       DB_SLAVE1_PORT: 3306
       DB_SLAVE1_USER: root
-      DB_SLAVE1_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
+      DB_SLAVE1_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
       DB_SLAVE1_NAME: pulsenet
       DB_SLAVE2_HOST: mysql-slave2
       DB_SLAVE2_PORT: 3306
       DB_SLAVE2_USER: root
-      DB_SLAVE2_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
+      DB_SLAVE2_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
       DB_SLAVE2_NAME: pulsenet
-      JWT_SECRET: ${JWT_SECRET:-project_demo_secret_change_me}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       SALT_ROUNDS: 10
       HEALTH_CHECK_INTERVAL: 10000
     depends_on:

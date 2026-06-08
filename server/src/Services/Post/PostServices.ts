@@ -14,6 +14,10 @@ export class PostService implements IPostService {
     return this.postRepo.findById(id);
   }
 
+  public async getAllPosts(): Promise<Post[]> {
+    return this.postRepo.findAll();
+  }
+
   public async getPostsByCommunity(communityId: number): Promise<Post[]> {
     return this.postRepo.findByCommunityId(communityId);
   }
@@ -66,6 +70,7 @@ export class PostService implements IPostService {
   public async updatePost(
     id: number,
     userId: number,
+    userRole: string,
     title?: string,
     content?: string,
     imageUrl?: string | null
@@ -75,7 +80,11 @@ export class PostService implements IPostService {
       return { success: false, status: 404, message: 'Post not found', data: null };
     }
 
-    if (post.authorId !== userId) {
+    const isAuthor = post.authorId === userId;
+    const isAdmin = userRole === 'admin';
+    const isModerator = await this.communityRepo.isModerator(post.communityId, userId);
+
+    if (!isAuthor && !isAdmin && !isModerator) {
       return { success: false, status: 403, message: 'Unauthorized to edit this post', data: null };
     }
 
@@ -89,6 +98,41 @@ export class PostService implements IPostService {
     }
 
     return { success: true, status: 200, message: 'Post updated successfully', data: true };
+  }
+
+  private async canManagePost(postId: number, userId: number, userRole: string): Promise<ServiceResult<Post>> {
+    const post = await this.postRepo.findById(postId);
+    if (post.id === 0) {
+      return { success: false, status: 404, message: 'Post not found', data: null };
+    }
+
+    const isAuthor = post.authorId === userId;
+    const isAdmin = userRole === 'admin';
+    const isModerator = await this.communityRepo.isModerator(post.communityId, userId);
+    if (!isAuthor && !isAdmin && !isModerator) {
+      return { success: false, status: 403, message: 'Unauthorized to manage post tags', data: null };
+    }
+
+    return { success: true, status: 200, message: 'OK', data: post };
+  }
+
+  public async addTag(postId: number, tagId: number, userId: number, userRole: string): Promise<ServiceResult<boolean>> {
+    const allowed = await this.canManagePost(postId, userId, userRole);
+    if (!allowed.success) return { success: false, status: allowed.status, message: allowed.message, data: null };
+
+    await this.postRepo.addTagToPost(postId, tagId);
+    return { success: true, status: 200, message: 'Tag added to post', data: true };
+  }
+
+  public async removeTag(postId: number, tagId: number, userId: number, userRole: string): Promise<ServiceResult<boolean>> {
+    const allowed = await this.canManagePost(postId, userId, userRole);
+    if (!allowed.success) return { success: false, status: allowed.status, message: allowed.message, data: null };
+
+    const removed = await this.postRepo.removeTagFromPost(postId, tagId);
+    if (!removed) {
+      return { success: false, status: 404, message: 'Post tag not found', data: null };
+    }
+    return { success: true, status: 200, message: 'Tag removed from post', data: true };
   }
 
   public async deletePost(id: number, userId: number, userRole: string): Promise<ServiceResult<boolean>> {

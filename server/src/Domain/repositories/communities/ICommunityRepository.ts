@@ -9,6 +9,7 @@ export interface ICommunityRepository {
   getPublic(): Promise<CommunityDto[]>;
   getAll(): Promise<CommunityDto[]>;
   getById(id: number): Promise<CommunityDto>;
+  getByName(name: string): Promise<CommunityDto>;
   getByUserId(userId: number): Promise<CommunityDto[]>;
   create(dto: CreateCommunityDto, createdBy: number): Promise<CommunityDto>;
   update(id: number, dto: UpdateCommunityDto): Promise<boolean>;

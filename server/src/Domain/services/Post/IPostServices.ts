@@ -3,6 +3,7 @@ import { ServiceResult } from '../../types/ServiceResult';
 
 export interface IPostService {
   getPostById(id: number): Promise<Post>;
+  getAllPosts(): Promise<Post[]>;
   getPostsByCommunity(communityId: number): Promise<Post[]>;
   getHomeFeed(userId: number): Promise<Post[]>;
   createPost(
@@ -16,11 +17,14 @@ export interface IPostService {
   updatePost(
     id: number,
     userId: number,
+    userRole: string,
     title?: string,
     content?: string,
     imageUrl?: string | null
   ): Promise<ServiceResult<boolean>>;
   deletePost(id: number, userId: number, userRole: string): Promise<ServiceResult<boolean>>;
+  addTag(postId: number, tagId: number, userId: number, userRole: string): Promise<ServiceResult<boolean>>;
+  removeTag(postId: number, tagId: number, userId: number, userRole: string): Promise<ServiceResult<boolean>>;
   likePost(postId: number, userId: number): Promise<ServiceResult<boolean>>;
   unlikePost(postId: number, userId: number): Promise<ServiceResult<boolean>>;
 }

@@ -13,6 +13,7 @@ export class DbManager {
     private readonly startTime: Date = new Date();
     private readonly healthChecker: DbHealthChecker;
     private readonly router: DbConnectionRouter;
+    private failoverInProgress = false;
 
     public constructor(private readonly logger: ILoggerService) {
         this.master = {
@@ -39,15 +40,16 @@ export class DbManager {
     // ── Init ──────────────────────────────────────────────────────
 
     public async init(): Promise<void> {
-        await this.healthChecker.init(this.master, this.slaves);
+        await this.healthChecker.init(this.master, this.slaves, this.handleAutomaticFailover.bind(this));
     }
 
     public async runHealthCheck(): Promise<void> {
         await this.healthChecker.runHealthCheck(this.master, this.slaves);
+        await this.handleAutomaticFailover();
     }
 
     public startHealthCheck(): void {
-        this.healthChecker.startHealthCheck(this.master, this.slaves);
+        this.healthChecker.startHealthCheck(this.master, this.slaves, this.handleAutomaticFailover.bind(this));
     }
 
     public stop(): void {
@@ -66,6 +68,23 @@ export class DbManager {
 
     public async getPrimaryReadConnection(): Promise<{ conn: PoolConnection; nodeName: string } | null> {
         return this.router.getWriteConnection(this.master);
+    }
+
+    private async handleAutomaticFailover(): Promise<void> {
+        if (this.master.node.status !== NodeStatus.OFFLINE || this.failoverInProgress) return;
+
+        this.failoverInProgress = true;
+        try {
+            this.logger.warn("DB", "Master is offline - starting automatic failover");
+            const result = await this.promoteSlaveToMaster();
+            if (!result.success) {
+                this.logger.error("DB", `Automatic failover failed: ${result.message}`);
+                return;
+            }
+            this.logger.warn("DB", `Automatic failover completed: ${result.message}`);
+        } finally {
+            this.failoverInProgress = false;
+        }
     }
 
     // ── Health Status ─────────────────────────────────────────────
@@ -100,7 +119,10 @@ export class DbManager {
         promotedNode?: string;
         previousMaster?: string;
     }> {
-        const candidateIndex = this.slaves.findIndex((s) => s.node.status !== NodeStatus.OFFLINE);
+        let candidateIndex = this.slaves.findIndex((s) => s.node.status === NodeStatus.HEALTHY);
+        if (candidateIndex === -1) {
+            candidateIndex = this.slaves.findIndex((s) => s.node.status === NodeStatus.DEGRADED);
+        }
         if (candidateIndex === -1) {
             return { success: false, message: "No healthy slave available for promotion" };
         }

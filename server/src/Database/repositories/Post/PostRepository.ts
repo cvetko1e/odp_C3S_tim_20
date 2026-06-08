@@ -119,6 +119,30 @@ export class PostRepository implements IPostRepository {
     }
   }
 
+  public async findAll(): Promise<Post[]> {
+    const res = await this.db.getReadConnection();
+    if (!res) return [];
+    try {
+      const [rows] = await res.conn.execute<PostRow[]>(
+        `SELECT p.id, p.title, p.content, p.mediaUrl AS imageUrl, p.authorId, p.communityId, p.createdAt, p.updatedAt,
+                u.username AS authorUsername,
+                (SELECT COUNT(*) FROM post_likes WHERE postId = p.id) AS likesCount,
+                (SELECT COUNT(*) FROM comments WHERE postId = p.id) AS commentsCount
+         FROM posts p
+         LEFT JOIN users u ON p.authorId = u.id
+         ORDER BY p.id DESC`
+      );
+      const posts = rows.map((row) => this.map(row));
+      await this.populateTagsForPosts(posts, res.conn);
+      return posts;
+    } catch {
+      this.logger.error("PostRepository", "findAll failed");
+      return [];
+    } finally {
+      res.conn.release();
+    }
+  }
+
   public async findByCommunityId(communityId: number): Promise<Post[]> {
     const res = await this.db.getReadConnection();
     if (!res) return [];
@@ -146,7 +170,7 @@ export class PostRepository implements IPostRepository {
   }
 
   public async getFeed(userId: number): Promise<Post[]> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<PostRow[]>(
@@ -233,6 +257,23 @@ export class PostRepository implements IPostRepository {
     }
   }
 
+  public async removeTagFromPost(postId: number, tagId: number): Promise<boolean> {
+    const res = await this.db.getWriteConnection();
+    if (!res) return false;
+    try {
+      const [result] = await res.conn.execute<ResultSetHeader>(
+        `DELETE FROM post_tags WHERE postId = ? AND tagId = ?`,
+        [postId, tagId]
+      );
+      return result.affectedRows > 0;
+    } catch {
+      this.logger.error("PostRepository", "removeTagFromPost failed");
+      return false;
+    } finally {
+      res.conn.release();
+    }
+  }
+
   public async removeTagsFromPost(postId: number): Promise<void> {
     const res = await this.db.getWriteConnection();
     if (!res) return;
@@ -246,7 +287,7 @@ export class PostRepository implements IPostRepository {
   }
 
   public async hasUserLikedPost(postId: number, userId: number): Promise<boolean> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return false;
     try {
       const [rows] = await res.conn.execute<CountRow[]>(

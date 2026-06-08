@@ -58,7 +58,7 @@ export class AuditRepository implements IAuditRepository {
   }
 
   public async getAll(limit = 50, offset = 0): Promise<AuditLogDto[]> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<AuditRow[]>(

@@ -10,9 +10,9 @@
 #   4. Configure Slaves to start replication FROM current position
 #   => Slaves have the schema already, replication only handles new data
 
-ROOT_PASS="root1234"
-REPL_USER="replicator"
-REPL_PASS="repl1234"
+ROOT_PASS="${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}"
+REPL_USER="${MYSQL_REPLICATION_USER:?MYSQL_REPLICATION_USER is required}"
+REPL_PASS="${MYSQL_REPLICATION_PASSWORD:?MYSQL_REPLICATION_PASSWORD is required}"
 
 DB_NAME="pulsenet"
 

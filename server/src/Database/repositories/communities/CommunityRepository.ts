@@ -128,8 +128,27 @@ export class CommunityRepository implements ICommunityRepository {
     }
   }
 
+  public async getByName(name: string): Promise<CommunityDto> {
+    const res = await this.db.getReadConnection();
+    if (!res) return new CommunityDto();
+    try {
+      const [rows] = await res.conn.execute<CommunityRow[]>(
+        `SELECT id, name, description, rules, avatarUrl, type, createdBy, createdAt, updatedAt
+         FROM communities
+         WHERE name = ?`,
+        [name],
+      );
+      return rows.length > 0 ? this.map(rows[0]) : new CommunityDto();
+    } catch (err) {
+      this.logger.error("CommunityRepository", "getByName failed", err);
+      return new CommunityDto();
+    } finally {
+      res.conn.release();
+    }
+  }
+
   public async getByUserId(userId: number): Promise<CommunityDto[]> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<CommunityRow[]>(
@@ -241,7 +260,7 @@ export class CommunityRepository implements ICommunityRepository {
   }
 
   public async isMember(communityId: number, userId: number): Promise<boolean> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return false;
     try {
       const [rows] = await res.conn.execute<CountRow[]>(
@@ -260,7 +279,7 @@ export class CommunityRepository implements ICommunityRepository {
   }
 
   public async isModerator(communityId: number, userId: number): Promise<boolean> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return false;
     try {
       const [rows] = await res.conn.execute<CountRow[]>(
@@ -325,7 +344,7 @@ export class CommunityRepository implements ICommunityRepository {
   }
 
   public async getMembers(communityId: number): Promise<CommunityMemberDto[]> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
       const [rows] = await res.conn.execute<CommunityMemberRow[]>(
@@ -402,7 +421,7 @@ export class CommunityRepository implements ICommunityRepository {
   }
 
   public async getCommunityType(communityId: number): Promise<CommunityType | ""> {
-    const res = await this.db.getPrimaryReadConnection();
+    const res = await this.db.getReadConnection();
     if (!res) return "";
     try {
       const [rows] = await res.conn.execute<CommunityTypeRow[]>(

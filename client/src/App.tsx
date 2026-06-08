@@ -6,6 +6,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import NotFoundPage from "./pages/not_found/NotFoundPage";
 import ForbiddenPage from "./pages/not_found/ForbiddenPage";
+import LandingPage from "./pages/LandingPage";
 
 import UserDashboard from "./pages/user/UserDashboard";
 import { UserProfilePage } from "./pages/user/UserProfilePage";
@@ -24,6 +25,7 @@ import { EditPostPage } from "./pages/posts/EditPostPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminUsersPage from "./pages/admin/UsersPage";
 import AdminCommunitiesPage from "./pages/admin/AdminCommunitiesPage";
+import AdminPostsPage from "./pages/admin/AdminPostsPage";
 import AdminTagsPage from "./pages/admin/AdminTagsPage";
 import AdminAuditLogPage from "./pages/admin/AdminAuditLogPage";
 import AdminHealthPage from "./pages/admin/AdminHealthPage";
@@ -36,6 +38,7 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
 
       {/* Public / guest routes */}
+      <Route path="/" element={<Layout><LandingPage /></Layout>} />
       <Route path="/communities" element={<Layout><CommunitiesPage /></Layout>} />
       <Route path="/communities/:id" element={<Layout><CommunityDetailsPage /></Layout>} />
       <Route path="/posts/:id" element={<Layout><PostDetailsPage /></Layout>} />
@@ -54,12 +57,12 @@ export default function App() {
       <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboardPage /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><AdminUsersPage /></ProtectedRoute>} />
       <Route path="/admin/communities" element={<ProtectedRoute requiredRole="admin"><AdminCommunitiesPage /></ProtectedRoute>} />
+      <Route path="/admin/posts" element={<ProtectedRoute requiredRole="admin"><AdminPostsPage /></ProtectedRoute>} />
       <Route path="/admin/tags" element={<ProtectedRoute requiredRole="admin"><AdminTagsPage /></ProtectedRoute>} />
       <Route path="/admin/audit" element={<ProtectedRoute requiredRole="admin"><AdminAuditLogPage /></ProtectedRoute>} />
       <Route path="/admin/health" element={<ProtectedRoute requiredRole="admin"><AdminHealthPage /></ProtectedRoute>} />
 
       {/* Fallback */}
-      <Route path="/" element={<Navigate to="/communities" replace />} />
       <Route path="/404" element={<NotFoundPage />} />
       <Route path="/403" element={<ForbiddenPage />} />
       <Route path="*" element={<Navigate to="/404" replace />} />

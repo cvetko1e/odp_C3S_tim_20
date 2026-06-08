@@ -85,18 +85,30 @@ export class DbHealthChecker {
         );
     }
 
-    public startHealthCheck(master: NodeInfo, slaves: NodeInfo[]): void {
+    public startHealthCheck(
+        master: NodeInfo,
+        slaves: NodeInfo[],
+        afterCheck?: () => Promise<void>,
+    ): void {
         if (this.healthTimer) return;
         this.healthTimer = setInterval(
-            () => void this.runHealthCheck(master, slaves),
+            () => void (async () => {
+                await this.runHealthCheck(master, slaves);
+                if (afterCheck) await afterCheck();
+            })(),
             HEALTH_CHECK_INTERVAL_MS,
         );
         this.logger.info("DB", `Health check started - interval ${HEALTH_CHECK_INTERVAL_MS}ms`);
     }
 
-    public async init(master: NodeInfo, slaves: NodeInfo[]): Promise<void> {
+    public async init(
+        master: NodeInfo,
+        slaves: NodeInfo[],
+        afterCheck?: () => Promise<void>,
+    ): Promise<void> {
         await this.runHealthCheck(master, slaves);
-        this.startHealthCheck(master, slaves);
+        if (afterCheck) await afterCheck();
+        this.startHealthCheck(master, slaves, afterCheck);
     }
 
     public stop(): void {

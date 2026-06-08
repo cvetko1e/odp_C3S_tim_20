@@ -15,6 +15,15 @@ export const postApi: IPostAPIService = {
     }
   },
 
+  async getAllPosts(token: string): Promise<Post[]> {
+    try {
+      const response = await apiClient.get<PostListResponse>("posts/all", { headers: authHeader(token) });
+      return response.data.success ? (response.data.data ?? []) : [];
+    } catch {
+      return [];
+    }
+  },
+
   async getPostsByCommunity(communityId: number, token?: string): Promise<Post[]> {
     try {
       const response = await apiClient.get<PostListResponse>(`posts/community/${communityId}`, { headers: token ? authHeader(token) : undefined });

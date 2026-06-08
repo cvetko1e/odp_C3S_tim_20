@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { authenticate } from '../../Middlewares/authentification/AuthMiddleware';
+import { authorize } from '../../Middlewares/authorization/AuthorizeMiddleware';
 import { Request, Response } from 'express';
 import { IPostService } from '../../Domain/services/Post/IPostServices';
 import { IAuditService } from '../../Domain/services/Audit/IAuditService';
+import { UserRole } from '../../Domain/enums/UserRole';
 import { validateCreatePost, validateUpdatePost } from '../validators/posts/validatePost';
 
 export class PostController {
@@ -18,11 +20,14 @@ export class PostController {
 
   private setupRoutes(): void {
     this.router.get('/posts/feed',                    authenticate, this.getFeed);
+    this.router.get('/posts/all',                     authenticate, authorize(UserRole.ADMIN), this.getAll);
     this.router.get('/posts/community/:communityId',  this.getByCommunity);
     this.router.get('/posts/:id',                     this.getById);
     this.router.post('/posts',                        authenticate, this.create);
     this.router.put('/posts/:id',                     authenticate, this.update);
     this.router.delete('/posts/:id',                  authenticate, this.delete);
+    this.router.post('/posts/:id/tags',               authenticate, this.addTag);
+    this.router.delete('/posts/:id/tags/:tagId',      authenticate, this.removeTag);
     this.router.post('/posts/:id/like',               authenticate, this.like);
     this.router.delete('/posts/:id/like',             authenticate, this.unlike);
   }
@@ -64,7 +69,8 @@ export class PostController {
   public getFeed = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.id;
-      if (!userId) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
+      const userRole = req.user?.role;
+      if (!userId || !userRole) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
       const posts = await this.postService.getHomeFeed(userId);
       res.status(200).json({ success: true, data: posts });
     } catch {
@@ -116,7 +122,8 @@ export class PostController {
       const id = this.parsePositiveInt(req.params.id);
       if (id === 0) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
       const userId = req.user?.id;
-      if (!userId) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
+      const userRole = req.user?.role;
+      if (!userId || !userRole) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
 
       const title   = typeof req.body.title   === 'string' ? req.body.title   : undefined;
       const content = typeof req.body.content === 'string' ? req.body.content : undefined;
@@ -127,7 +134,49 @@ export class PostController {
       const validation = validateUpdatePost({ title, content, imageUrl });
       if (!validation.valid) { res.status(400).json({ success: false, message: validation.message ?? 'Invalid input' }); return; }
 
-      const result = await this.postService.updatePost(id, userId, title?.trim(), content?.trim(), imageUrl === undefined ? undefined : (imageUrl?.trim() ?? null));
+      const result = await this.postService.updatePost(id, userId, userRole, title?.trim(), content?.trim(), imageUrl === undefined ? undefined : (imageUrl?.trim() ?? null));
+      res.status(result.status).json({ success: result.success, message: result.message });
+    } catch {
+      res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  };
+
+  public getAll = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const posts = await this.postService.getAllPosts();
+      res.status(200).json({ success: true, data: posts });
+    } catch {
+      res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  };
+
+  public addTag = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const postId = this.parsePositiveInt(req.params.id);
+      if (postId === 0) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
+      const tagId = typeof req.body.tagId === 'string' ? Number.parseInt(req.body.tagId, 10) : Number(req.body.tagId);
+      if (!Number.isInteger(tagId) || tagId <= 0) { res.status(400).json({ success: false, message: 'Invalid tag id' }); return; }
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      if (!userId || !userRole) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
+
+      const result = await this.postService.addTag(postId, tagId, userId, userRole);
+      res.status(result.status).json({ success: result.success, message: result.message });
+    } catch {
+      res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  };
+
+  public removeTag = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const postId = this.parsePositiveInt(req.params.id);
+      const tagId = this.parsePositiveInt(req.params.tagId);
+      if (postId === 0 || tagId === 0) { res.status(400).json({ success: false, message: 'Invalid id' }); return; }
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      if (!userId || !userRole) { res.status(401).json({ success: false, message: 'Unauthorized' }); return; }
+
+      const result = await this.postService.removeTag(postId, tagId, userId, userRole);
       res.status(result.status).json({ success: result.success, message: result.message });
     } catch {
       res.status(500).json({ success: false, message: 'Internal server error' });

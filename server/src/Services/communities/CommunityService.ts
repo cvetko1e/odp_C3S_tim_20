@@ -36,6 +36,11 @@ export class CommunityService implements ICommunityService {
   }
 
   public async create(dto: CreateCommunityDto, createdBy: number): Promise<ServiceResult<CommunityDto>> {
+    const existing = await this.communityRepo.getByName(dto.name);
+    if (existing.id !== 0) {
+      return { success: false, status: 409, message: "Community name already exists", data: null };
+    }
+
     const community = await this.communityRepo.create(dto, createdBy);
     if (community.id === 0) {
       return { success: false, status: 500, message: "Failed to create community", data: null };
