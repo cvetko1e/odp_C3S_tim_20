@@ -1,13 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/auth/useAuthHook";
 import type { IAuthAPIService } from "../../api_services/auth/IAuthAPIService";
 
 export function LoginForm({ authApi }: { authApi: IAuthAPIService }) {
   const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); setError(""); setLoading(true);
@@ -50,6 +54,13 @@ export function LoginForm({ authApi }: { authApi: IAuthAPIService }) {
           className="mt-2 bg-white hover:bg-white/90 disabled:opacity-50 text-black font-semibold rounded-xl py-3 text-sm transition-colors">
           {loading ? "Signing in…" : "Sign in"}
         </button>
+        <button
+           type="button"
+           onClick={() => navigate("/communities")}
+           className="border border-white/10 text-white/50 hover:text-white hover:bg-white/5 font-medium rounded-xl py-3 text-sm transition-colors"
+           >
+           Continue as guest
+          </button>
       </form>
 
       <p className="text-center text-white/30 text-sm mt-6">
