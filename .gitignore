@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+dist-ssr/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE / OS files
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+
+# Logs and caches
+logs/
+*.log
+.eslintcache
+.cache/
+
+# Keep npm lockfiles if they are intentionally tracked
+!package-lock.json
+!client/package-lock.json
+!server/package-lock.json

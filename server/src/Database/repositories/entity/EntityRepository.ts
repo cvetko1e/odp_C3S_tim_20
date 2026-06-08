@@ -4,7 +4,7 @@ import { Entity } from "../../../Domain/models/Entity";
 import { EntityDto } from "../../../Domain/DTOs/entity/EntityDto";
 import { CreateEntityDto } from "../../../Domain/DTOs/entity/CreateEntityDto";
 import { EntityStatus } from "../../../Domain/enums/EntityStatus";
-import { DbManager } from "../../connection/DbManager";;
+import { DbManager } from "../../connection/DbManager";
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
 
 export class EntityRepository implements IEntityRepository {
@@ -78,7 +78,8 @@ export class EntityRepository implements IEntityRepository {
     const res = await this.db.getWriteConnection();
     if (!res) return false;
     try {
-      const entries = Object.entries(fields).filter(([, v]) => v !== undefined);
+      const entries: Array<["status", EntityStatus]> = [];
+      if (fields.status !== undefined) entries.push(["status", fields.status]);
       if (entries.length === 0) return false;
       const setClause = entries.map(([k]) => `${k} = ?`).join(", ");
       const values = entries.map(([, v]) => v);

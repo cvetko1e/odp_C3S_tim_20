@@ -18,6 +18,16 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: Error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      localStorage.removeItem("authToken");
+    }
+    return Promise.reject(error);
+  },
+);
+
 export function errorResponse<T>(error: Error, fallback: string): ApiResponse<T> {
   if (axios.isAxiosError<ApiResponse<T>>(error)) {
     return { success: false, message: error.response?.data?.message ?? fallback };

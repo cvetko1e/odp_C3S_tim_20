@@ -2,6 +2,7 @@ import { Post } from '../../models/Post';
 
 export interface IPostRepository {
   findById(id: number): Promise<Post>;
+  findByIdFromPrimary(id: number): Promise<Post>;
   findByCommunityId(communityId: number): Promise<Post[]>;
   getFeed(userId: number): Promise<Post[]>;
   create(post: Post): Promise<number>;

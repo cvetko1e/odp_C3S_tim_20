@@ -15,15 +15,21 @@ export const optionalAuthenticate = (
     return;
   }
 
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.trim().length === 0) {
+    next();
+    return;
+  }
+
   try {
     const token = header.slice(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET ?? "") as JwtPayload;
+    const decoded = jwt.verify(token, secret) as JwtPayload;
 
-    if (decoded.id) {
+    if (decoded.id && (decoded.role === UserRole.USER || decoded.role === UserRole.ADMIN)) {
       req.user = {
         id: decoded.id,
         username: decoded.username,
-        role: decoded.role as UserRole,
+        role: decoded.role,
       };
     }
   } catch {

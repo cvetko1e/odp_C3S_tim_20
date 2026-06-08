@@ -1,4 +1,4 @@
-import { DbManager } from "../../connection/DbManager";;
+import { DbManager } from "../../connection/DbManager";
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
 import { IPostRepository } from "../../../Domain/repositories/Post/IPostRepository";
 import { Post } from "../../../Domain/models/Post";
@@ -87,6 +87,32 @@ export class PostRepository implements IPostRepository {
       return post;
     } catch {
       this.logger.error("PostRepository", "findById failed");
+      return new Post();
+    } finally {
+      res.conn.release();
+    }
+  }
+
+  public async findByIdFromPrimary(id: number): Promise<Post> {
+    const res = await this.db.getPrimaryReadConnection();
+    if (!res) return new Post();
+    try {
+      const [rows] = await res.conn.execute<PostRow[]>(
+        `SELECT p.id, p.title, p.content, p.mediaUrl AS imageUrl, p.authorId, p.communityId, p.createdAt, p.updatedAt,
+                u.username AS authorUsername,
+                (SELECT COUNT(*) FROM post_likes WHERE postId = p.id) AS likesCount,
+                (SELECT COUNT(*) FROM comments WHERE postId = p.id) AS commentsCount
+         FROM posts p
+         LEFT JOIN users u ON p.authorId = u.id
+         WHERE p.id = ?`,
+        [id]
+      );
+      if (rows.length === 0) return new Post();
+      const post = this.map(rows[0]);
+      await this.populateTagsForPosts([post], res.conn);
+      return post;
+    } catch {
+      this.logger.error("PostRepository", "findByIdFromPrimary failed");
       return new Post();
     } finally {
       res.conn.release();

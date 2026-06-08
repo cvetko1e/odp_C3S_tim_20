@@ -50,7 +50,7 @@ export class PostService implements IPostService {
       await this.postRepo.addTagToPost(postId, tagId);
     }
 
-    const createdPost = await this.postRepo.findById(postId);
+    const createdPost = await this.postRepo.findByIdFromPrimary(postId);
     if (createdPost.id === 0) {
       return { success: false, status: 500, message: 'Failed to load created post', data: null };
     }

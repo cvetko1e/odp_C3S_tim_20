@@ -1,15 +1,14 @@
-import axios from "axios";
 import type { IPostAPIService } from "./IPostAPIService";
 import { emptyPost, type Post } from "../../types/posts/Post";
 import type { PostListResponse, SinglePostResponse, PostActionResponse } from "../../types/posts/PostApiResponses";
+import { apiClient } from "../apiClient";
 
-const API_URL = import.meta.env.VITE_API_URL + "posts";
 const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
 
 export const postApi: IPostAPIService = {
   async getPostById(id: number, token?: string): Promise<Post> {
     try {
-      const response = await axios.get<SinglePostResponse>(`${API_URL}/${id}`, { headers: token ? authHeader(token) : undefined });
+      const response = await apiClient.get<SinglePostResponse>(`posts/${id}`, { headers: token ? authHeader(token) : undefined });
       return response.data.success ? (response.data.data ?? emptyPost) : emptyPost;
     } catch {
       return emptyPost;
@@ -18,7 +17,7 @@ export const postApi: IPostAPIService = {
 
   async getPostsByCommunity(communityId: number, token?: string): Promise<Post[]> {
     try {
-      const response = await axios.get<PostListResponse>(`${API_URL}/community/${communityId}`, { headers: token ? authHeader(token) : undefined });
+      const response = await apiClient.get<PostListResponse>(`posts/community/${communityId}`, { headers: token ? authHeader(token) : undefined });
       return response.data.success ? (response.data.data ?? []) : [];
     } catch {
       return [];
@@ -27,7 +26,7 @@ export const postApi: IPostAPIService = {
 
   async getHomeFeed(token: string): Promise<Post[]> {
     try {
-      const response = await axios.get<PostListResponse>(`${API_URL}/feed`, { headers: authHeader(token) });
+      const response = await apiClient.get<PostListResponse>("posts/feed", { headers: authHeader(token) });
       return response.data.success ? (response.data.data ?? []) : [];
     } catch {
       return [];
@@ -37,7 +36,7 @@ export const postApi: IPostAPIService = {
   async createPost(token: string, title: string, content: string, imageUrl: string | null, communityId: number, tagIds: number[]): Promise<Post> {
     try {
       const payload = { title, content, imageUrl, communityId, tagIds };
-      const response = await axios.post<SinglePostResponse>(API_URL, payload, { headers: authHeader(token) });
+      const response = await apiClient.post<SinglePostResponse>("posts", payload, { headers: authHeader(token) });
       return response.data.success ? (response.data.data ?? emptyPost) : emptyPost;
     } catch {
       return emptyPost;
@@ -47,7 +46,7 @@ export const postApi: IPostAPIService = {
   async updatePost(token: string, id: number, title?: string, content?: string, imageUrl?: string | null): Promise<boolean> {
     try {
       const payload = { title, content, imageUrl };
-      const response = await axios.put<PostActionResponse>(`${API_URL}/${id}`, payload, { headers: authHeader(token) });
+      const response = await apiClient.put<PostActionResponse>(`posts/${id}`, payload, { headers: authHeader(token) });
       return response.data.success;
     } catch {
       return false;
@@ -56,7 +55,7 @@ export const postApi: IPostAPIService = {
 
   async deletePost(token: string, id: number): Promise<boolean> {
     try {
-      const response = await axios.delete<PostActionResponse>(`${API_URL}/${id}`, { headers: authHeader(token) });
+      const response = await apiClient.delete<PostActionResponse>(`posts/${id}`, { headers: authHeader(token) });
       return response.data.success;
     } catch {
       return false;
@@ -65,7 +64,7 @@ export const postApi: IPostAPIService = {
 
   async likePost(token: string, id: number): Promise<boolean> {
     try {
-      const response = await axios.post<PostActionResponse>(`${API_URL}/${id}/like`, {}, { headers: authHeader(token) });
+      const response = await apiClient.post<PostActionResponse>(`posts/${id}/like`, {}, { headers: authHeader(token) });
       return response.data.success;
     } catch {
       return false;
@@ -74,7 +73,7 @@ export const postApi: IPostAPIService = {
 
   async unlikePost(token: string, id: number): Promise<boolean> {
     try {
-      const response = await axios.delete<PostActionResponse>(`${API_URL}/${id}/like`, { headers: authHeader(token) });
+      const response = await apiClient.delete<PostActionResponse>(`posts/${id}/like`, { headers: authHeader(token) });
       return response.data.success;
     } catch {
       return false;

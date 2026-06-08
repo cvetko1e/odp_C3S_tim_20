@@ -11,12 +11,15 @@ export class TagService implements ITagService {
   }
 
   public async createTag(name: string, createdBy: number): Promise<ServiceResult<Tag>> {
-       try {
-            const tag = await this.tagRepo.create(name, createdBy);
-            return { success: true, status: 201, message: "Tag created", data: tag };
-        } catch {
-            return { success: false, status: 500, message: "Failed to create tag", data: null };
-        }
+       const existing = await this.tagRepo.findByName(name);
+       if (existing.id !== 0) {
+            return { success: false, status: 409, message: "Tag already exists", data: null };
+       }
+       const tag = await this.tagRepo.create(name, createdBy);
+       if (tag.id === 0) {
+            return { success: false, status: 503, message: "Failed to create tag", data: null };
+       }
+       return { success: true, status: 201, message: "Tag created", data: tag };
     }
 
   public async deleteTag(id: number): Promise<ServiceResult<boolean>> {

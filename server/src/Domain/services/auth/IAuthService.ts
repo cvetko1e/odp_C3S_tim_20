@@ -6,7 +6,6 @@ export type RegisterInput = {
   lastName: string;
   email: string;
   password: string;
-  role: string;
   bio: string | null;
   profileImage: string | null;
 };

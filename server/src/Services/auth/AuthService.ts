@@ -25,12 +25,11 @@ export class AuthService implements IAuthService {
     if (byEmail.id !== 0) return new AuthUserDto();
     const hash = await bcrypt.hash(input.password, this.saltRounds).catch(() => "");
     if (!hash) return new AuthUserDto();
-    const userRole = input.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.USER;
     const created = await this.userRepo.create(new User(
       0,
       input.username,
       input.email,
-      userRole,
+      UserRole.USER,
       hash,
       1,
       input.firstName,
