@@ -48,7 +48,7 @@ export default function CommunityDetailsPage() {
     try {
       const [item, communityPosts] = await Promise.all([
         communityApi.getCommunityById(id, token ?? undefined),
-        postApi.getPostsByCommunity(id, token ?? undefined),
+        postApi.getPostsByCommunity(id, token ?? undefined, sortMode),
       ]);
 
       if (item.id === 0) {
@@ -68,7 +68,7 @@ export default function CommunityDetailsPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, token]);
+  }, [id, token, sortMode]);
 
   useEffect(() => { void loadCommunity(); }, [loadCommunity]);
   useEffect(() => { if (canModerate) void loadMembers(); }, [canModerate, loadMembers]);

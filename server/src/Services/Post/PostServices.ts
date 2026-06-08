@@ -1,8 +1,9 @@
 import { IPostService } from '../../Domain/services/Post/IPostServices';
-import { IPostRepository } from '../../Domain/repositories/Post/IPostRepository';
+import { IPostRepository, PostSortBy } from '../../Domain/repositories/Post/IPostRepository';
 import { ICommunityRepository } from '../../Domain/repositories/communities/ICommunityRepository';
 import { Post } from '../../Domain/models/Post';
 import { ServiceResult } from '../../Domain/types/ServiceResult';
+import { UserRole } from '../../Domain/enums/UserRole';
 
 export class PostService implements IPostService {
   public constructor(
@@ -10,16 +11,58 @@ export class PostService implements IPostService {
     private readonly communityRepo: ICommunityRepository
   ) {}
 
-  public async getPostById(id: number): Promise<Post> {
-    return this.postRepo.findById(id);
+  private async canViewCommunity(communityId: number, viewerId?: number, viewerRole?: UserRole): Promise<ServiceResult<boolean>> {
+    const communityType = await this.communityRepo.getCommunityType(communityId);
+    if (!communityType) {
+      return { success: false, status: 404, message: 'Community not found', data: null };
+    }
+
+    if (communityType === 'public') {
+      return { success: true, status: 200, message: 'OK', data: true };
+    }
+
+    if (!viewerId || !viewerRole) {
+      return { success: false, status: 403, message: 'Private community posts are available only to members', data: null };
+    }
+
+    if (viewerRole === UserRole.ADMIN) {
+      return { success: true, status: 200, message: 'OK', data: true };
+    }
+
+    const activeMember = await this.communityRepo.isActiveMember(communityId, viewerId);
+    if (!activeMember) {
+      return { success: false, status: 403, message: 'Private community posts are available only to members', data: null };
+    }
+
+    return { success: true, status: 200, message: 'OK', data: true };
+  }
+
+  public async getPostById(id: number, viewerId?: number, viewerRole?: UserRole): Promise<ServiceResult<Post>> {
+    const post = await this.postRepo.findById(id);
+    if (post.id === 0) {
+      return { success: false, status: 404, message: 'Post not found', data: null };
+    }
+
+    const allowed = await this.canViewCommunity(post.communityId, viewerId, viewerRole);
+    if (!allowed.success) {
+      return { success: false, status: allowed.status, message: allowed.message, data: null };
+    }
+
+    return { success: true, status: 200, message: 'OK', data: post };
   }
 
   public async getAllPosts(): Promise<Post[]> {
     return this.postRepo.findAll();
   }
 
-  public async getPostsByCommunity(communityId: number): Promise<Post[]> {
-    return this.postRepo.findByCommunityId(communityId);
+  public async getPostsByCommunity(communityId: number, sortBy: PostSortBy = 'newest', viewerId?: number, viewerRole?: UserRole): Promise<ServiceResult<Post[]>> {
+    const allowed = await this.canViewCommunity(communityId, viewerId, viewerRole);
+    if (!allowed.success) {
+      return { success: false, status: allowed.status, message: allowed.message, data: null };
+    }
+
+    const posts = await this.postRepo.findByCommunityId(communityId, sortBy);
+    return { success: true, status: 200, message: 'OK', data: posts };
   }
 
   public async getHomeFeed(userId: number): Promise<Post[]> {

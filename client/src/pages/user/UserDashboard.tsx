@@ -82,7 +82,7 @@ export default function UserDashboard() {
 
             <section className="space-y-3">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">My Communities</h2>
-              {communities.length === 0 ? <Empty message="You are not in any communities" /> : communities.slice(0, 4).map((community) => (
+              {communities.length === 0 ? <Empty message="You are not in communities" /> : communities.slice(0, 4).map((community) => (
                 <CommunityCard key={community.id} community={community} />
               ))}
             </section>

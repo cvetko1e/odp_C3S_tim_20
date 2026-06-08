@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { authenticate } from '../../Middlewares/authentification/AuthMiddleware';
+import { optionalAuthenticate } from '../../Middlewares/authentification/OptionalAuthMiddleware';
 import { authorize } from '../../Middlewares/authorization/AuthorizeMiddleware';
 import { Request, Response } from 'express';
 import { IPostService } from '../../Domain/services/Post/IPostServices';
 import { IAuditService } from '../../Domain/services/Audit/IAuditService';
 import { UserRole } from '../../Domain/enums/UserRole';
 import { validateCreatePost, validateUpdatePost } from '../validators/posts/validatePost';
+import { PostSortBy } from '../../Domain/repositories/Post/IPostRepository';
 
 export class PostController {
   private readonly router: Router;
@@ -21,8 +23,8 @@ export class PostController {
   private setupRoutes(): void {
     this.router.get('/posts/feed',                    authenticate, this.getFeed);
     this.router.get('/posts/all',                     authenticate, authorize(UserRole.ADMIN), this.getAll);
-    this.router.get('/posts/community/:communityId',  this.getByCommunity);
-    this.router.get('/posts/:id',                     this.getById);
+    this.router.get('/posts/community/:communityId',  optionalAuthenticate, this.getByCommunity);
+    this.router.get('/posts/:id',                     optionalAuthenticate, this.getById);
     this.router.post('/posts',                        authenticate, this.create);
     this.router.put('/posts/:id',                     authenticate, this.update);
     this.router.delete('/posts/:id',                  authenticate, this.delete);
@@ -43,13 +45,16 @@ export class PostController {
     return parsed;
   }
 
+  private parseSortBy(raw: Request['query'][string]): PostSortBy {
+    return raw === 'popular' || raw === 'commented' || raw === 'newest' ? raw : 'newest';
+  }
+
   public getById = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = this.parsePositiveInt(req.params.id);
       if (id === 0) { res.status(400).json({ success: false, message: 'Invalid post id' }); return; }
-      const post = await this.postService.getPostById(id);
-      if (post.id === 0) { res.status(404).json({ success: false, message: 'Post not found' }); return; }
-      res.status(200).json({ success: true, data: post });
+      const result = await this.postService.getPostById(id, req.user?.id, req.user?.role);
+      res.status(result.status).json({ success: result.success, data: result.data, message: result.message });
     } catch {
       res.status(500).json({ success: false, message: 'Internal server error' });
     }
@@ -59,8 +64,9 @@ export class PostController {
     try {
       const communityId = this.parsePositiveInt(req.params.communityId);
       if (communityId === 0) { res.status(400).json({ success: false, message: 'Invalid community id' }); return; }
-      const posts = await this.postService.getPostsByCommunity(communityId);
-      res.status(200).json({ success: true, data: posts });
+      const sortBy = this.parseSortBy(req.query.sortBy);
+      const result = await this.postService.getPostsByCommunity(communityId, sortBy, req.user?.id, req.user?.role);
+      res.status(result.status).json({ success: result.success, data: result.data, message: result.message });
     } catch {
       res.status(500).json({ success: false, message: 'Internal server error' });
     }
@@ -90,7 +96,7 @@ export class PostController {
       const rawTagIds = req.body.tagIds;
       const tagIds = Array.isArray(rawTagIds)
         ? rawTagIds.map((value: number | string) => Number(value))
-        : rawTagIds;
+        : [];
 
       const title   = typeof req.body.title   === 'string' ? req.body.title   : '';
       const content = typeof req.body.content === 'string' ? req.body.content : '';

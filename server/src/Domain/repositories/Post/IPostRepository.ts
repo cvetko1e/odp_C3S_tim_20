@@ -1,10 +1,12 @@
 import { Post } from '../../models/Post';
 
+export type PostSortBy = 'newest' | 'popular' | 'commented';
+
 export interface IPostRepository {
   findById(id: number): Promise<Post>;
   findByIdFromPrimary(id: number): Promise<Post>;
   findAll(): Promise<Post[]>;
-  findByCommunityId(communityId: number): Promise<Post[]>;
+  findByCommunityId(communityId: number, sortBy?: PostSortBy): Promise<Post[]>;
   getFeed(userId: number): Promise<Post[]>;
   create(post: Post): Promise<number>;
   update(post: Post): Promise<boolean>;

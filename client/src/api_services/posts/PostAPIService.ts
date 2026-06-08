@@ -24,9 +24,12 @@ export const postApi: IPostAPIService = {
     }
   },
 
-  async getPostsByCommunity(communityId: number, token?: string): Promise<Post[]> {
+  async getPostsByCommunity(communityId: number, token?: string, sortBy: "newest" | "popular" | "commented" = "newest"): Promise<Post[]> {
     try {
-      const response = await apiClient.get<PostListResponse>(`posts/community/${communityId}`, { headers: token ? authHeader(token) : undefined });
+      const response = await apiClient.get<PostListResponse>(`posts/community/${communityId}`, {
+        headers: token ? authHeader(token) : undefined,
+        params: { sortBy },
+      });
       return response.data.success ? (response.data.data ?? []) : [];
     } catch {
       return [];

@@ -7,6 +7,7 @@ export interface ICommentsAPIService {
   create(postId: number, content: string, parentId: number | null): Promise<ApiResponse<CommentDto>>;
   update(id: number, content: string): Promise<ApiResponse<void>>;
   remove(id: number): Promise<ApiResponse<void>>;
+  flag(id: number): Promise<ApiResponse<void>>;
   like(id: number): Promise<ApiResponse<void>>;
   unlike(id: number): Promise<ApiResponse<void>>;
 }

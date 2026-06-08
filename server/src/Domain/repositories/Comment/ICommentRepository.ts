@@ -6,6 +6,8 @@ export interface ICommentRepository {
   create(postId: number, authorId: number, content: string, parentId: number | null): Promise<CommentDto>;
   update(id: number, content: string): Promise<boolean>;
   softDelete(id: number): Promise<boolean>;
+  flag(id: number): Promise<boolean>;
+  canModerateComment(commentId: number, userId: number): Promise<boolean>;
 
   hasUserLikedComment(commentId: number, userId: number): Promise<boolean>;
   addLike(commentId: number, userId: number): Promise<boolean>;

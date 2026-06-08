@@ -84,8 +84,11 @@ export class CommentService implements ICommentService {
 
     const isAuthor = comment.authorId === userId;
     const isAdmin = userRole === "admin";
+    const isModerator = isAuthor || isAdmin
+      ? false
+      : await this.commentRepo.canModerateComment(id, userId);
 
-    if (!isAuthor && !isAdmin) {
+    if (!isAuthor && !isAdmin && !isModerator) {
       return { success: false, status: 403, message: "Unauthorized to delete this comment", data: null };
     }
 
@@ -95,6 +98,36 @@ export class CommentService implements ICommentService {
     }
 
     return { success: true, status: 200, message: "Comment deleted", data: true };
+  }
+
+  public async flagComment(
+    id: number,
+    userId: number,
+    userRole: string
+  ): Promise<ServiceResult<boolean>> {
+    const comment = await this.commentRepo.findById(id);
+    if (comment.id === 0) {
+      return { success: false, status: 404, message: "Comment not found", data: null };
+    }
+    if (comment.isDeleted) {
+      return { success: false, status: 400, message: "Cannot flag a deleted comment", data: null };
+    }
+    if (comment.isFlagged) {
+      return { success: false, status: 409, message: "Comment is already flagged", data: null };
+    }
+
+    const isAdmin = userRole === "admin";
+    const isModerator = await this.commentRepo.canModerateComment(id, userId);
+    if (!isAdmin && !isModerator) {
+      return { success: false, status: 403, message: "Unauthorized to flag this comment", data: null };
+    }
+
+    const flagged = await this.commentRepo.flag(id);
+    if (!flagged) {
+      return { success: false, status: 500, message: "Failed to flag comment", data: null };
+    }
+
+    return { success: true, status: 200, message: "Comment flagged", data: true };
   }
 
   public async likeComment(commentId: number, userId: number): Promise<ServiceResult<boolean>> {

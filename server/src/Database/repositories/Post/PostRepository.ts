@@ -1,6 +1,6 @@
 import { DbManager } from "../../connection/DbManager";
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
-import { IPostRepository } from "../../../Domain/repositories/Post/IPostRepository";
+import { IPostRepository, PostSortBy } from "../../../Domain/repositories/Post/IPostRepository";
 import { Post } from "../../../Domain/models/Post";
 import { Tag } from "../../../Domain/models/Tag";
 import type { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
@@ -119,6 +119,12 @@ export class PostRepository implements IPostRepository {
     }
   }
 
+  private getCommunityOrderBy(sortBy: PostSortBy): string {
+    if (sortBy === "popular") return "likesCount DESC, p.id DESC";
+    if (sortBy === "commented") return "commentsCount DESC, p.id DESC";
+    return "p.id DESC";
+  }
+
   public async findAll(): Promise<Post[]> {
     const res = await this.db.getReadConnection();
     if (!res) return [];
@@ -143,10 +149,11 @@ export class PostRepository implements IPostRepository {
     }
   }
 
-  public async findByCommunityId(communityId: number): Promise<Post[]> {
+  public async findByCommunityId(communityId: number, sortBy: PostSortBy = "newest"): Promise<Post[]> {
     const res = await this.db.getReadConnection();
     if (!res) return [];
     try {
+      const orderBy = this.getCommunityOrderBy(sortBy);
       const [rows] = await res.conn.execute<PostRow[]>(
         `SELECT p.id, p.title, p.content, p.mediaUrl AS imageUrl, p.authorId, p.communityId, p.createdAt, p.updatedAt,
                 u.username AS authorUsername,
@@ -155,7 +162,7 @@ export class PostRepository implements IPostRepository {
          FROM posts p
          LEFT JOIN users u ON p.authorId = u.id
          WHERE p.communityId = ?
-         ORDER BY p.id DESC`,
+         ORDER BY ${orderBy}`,
         [communityId]
       );
       const posts = rows.map((row) => this.map(row));

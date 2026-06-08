@@ -9,5 +9,6 @@ export type CommentDto = {
   updatedAt: string | null;
   authorUsername: string | null;
   likesCount: number;
+  isFlagged: number;
   replies: CommentDto[];
 };

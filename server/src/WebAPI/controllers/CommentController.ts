@@ -14,6 +14,7 @@ export class CommentController {
     this.router.post("/comments",              authenticate, this.create.bind(this));
     this.router.put("/comments/:id",           authenticate, this.update.bind(this));
     this.router.delete("/comments/:id",        authenticate, this.delete.bind(this));
+    this.router.patch("/comments/:id/flag",    authenticate, this.flag.bind(this));
     this.router.post("/comments/:id/like",     authenticate, this.like.bind(this));
     this.router.delete("/comments/:id/like",   authenticate, this.unlike.bind(this));
   }
@@ -89,6 +90,25 @@ export class CommentController {
       const id = this.parsePositiveInt(req.params.id);
       if (id === 0) { res.status(400).json({ success: false, message: "Invalid comment id" }); return; }
       const result = await this.commentService.deleteComment(id, userId, userRole);
+      res.status(result.status).json({ success: result.success, message: result.message });
+    } catch {
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  private async flag(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      if (!userId || !userRole) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
+      const id = this.parsePositiveInt(req.params.id);
+      if (id === 0) { res.status(400).json({ success: false, message: "Invalid comment id" }); return; }
+      const result = await this.commentService.flagComment(id, userId, userRole);
+
+      if (result.success) {
+        await this.auditService.log("FLAG_COMMENT", userId, "comment", id, null, req.ip ?? null);
+      }
+
       res.status(result.status).json({ success: result.success, message: result.message });
     } catch {
       res.status(500).json({ success: false, message: "Internal server error" });

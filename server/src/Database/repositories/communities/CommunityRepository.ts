@@ -278,6 +278,25 @@ export class CommunityRepository implements ICommunityRepository {
     }
   }
 
+  public async isActiveMember(communityId: number, userId: number): Promise<boolean> {
+    const res = await this.db.getPrimaryReadConnection();
+    if (!res) return false;
+    try {
+      const [rows] = await res.conn.execute<CountRow[]>(
+        `SELECT COUNT(*) AS cnt
+         FROM community_members
+         WHERE communityId = ? AND userId = ? AND status = ?`,
+        [communityId, userId, "active"],
+      );
+      return (rows[0]?.cnt ?? 0) > 0;
+    } catch (err) {
+      this.logger.error("CommunityRepository", "isActiveMember failed", err);
+      return false;
+    } finally {
+      res.conn.release();
+    }
+  }
+
   public async isModerator(communityId: number, userId: number): Promise<boolean> {
     const res = await this.db.getReadConnection();
     if (!res) return false;

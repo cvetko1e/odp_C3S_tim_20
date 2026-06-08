@@ -6,6 +6,7 @@ export interface ICommentService {
   createComment(postId: number, authorId: number, content: string, parentId: number | null): Promise<ServiceResult<CommentDto>>;
   updateComment(id: number, userId: number, content: string): Promise<ServiceResult<boolean>>;
   deleteComment(id: number, userId: number, userRole: string): Promise<ServiceResult<boolean>>;
+  flagComment(id: number, userId: number, userRole: string): Promise<ServiceResult<boolean>>;
   likeComment(commentId: number, userId: number): Promise<ServiceResult<boolean>>;
   unlikeComment(commentId: number, userId: number): Promise<ServiceResult<boolean>>;
 }

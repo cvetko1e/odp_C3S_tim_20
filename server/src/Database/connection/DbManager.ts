@@ -133,6 +133,13 @@ export class DbManager {
         const previousMasterHost = oldMaster.node.host;
         const previousMasterPort = oldMaster.node.port;
 
+        const promotedReady = await this.preparePromotedMaster(promoted);
+        if (!promotedReady) {
+            return { success: false, message: `Failed to promote '${promoted.name}' for writes` };
+        }
+
+        await this.demotePreviousMaster(oldMaster);
+
         promoted.node.role = "master";
         oldMaster.node.role = "slave";
 
@@ -149,6 +156,44 @@ export class DbManager {
             promotedNode: promoted.name,
             previousMaster,
         };
+    }
+
+    private async preparePromotedMaster(promoted: NodeInfo): Promise<boolean> {
+        let conn: PoolConnection | null = null;
+        try {
+            conn = await promoted.pool.getConnection();
+            await conn.query("STOP REPLICA");
+            await conn.query("RESET REPLICA ALL");
+            try {
+                await conn.query("SET GLOBAL super_read_only = OFF");
+            } catch {
+                this.logger.warn("DB", `Node ${promoted.name} does not support super_read_only or it is already disabled`);
+            }
+            await conn.query("SET GLOBAL read_only = OFF");
+            return true;
+        } catch (err) {
+            this.logger.error("DB", `Failed to prepare promoted master ${promoted.name}`, err);
+            return false;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
+    private async demotePreviousMaster(previousMaster: NodeInfo): Promise<void> {
+        let conn: PoolConnection | null = null;
+        try {
+            conn = await previousMaster.pool.getConnection();
+            try {
+                await conn.query("SET GLOBAL super_read_only = ON");
+            } catch {
+                this.logger.warn("DB", `Node ${previousMaster.name} does not support super_read_only`);
+            }
+            await conn.query("SET GLOBAL read_only = ON");
+        } catch (err) {
+            this.logger.warn("DB", `Previous master ${previousMaster.name} could not be set read-only: ${err instanceof Error ? err.message : String(err)}`);
+        } finally {
+            if (conn) conn.release();
+        }
     }
 
     private async logFailoverAudit(

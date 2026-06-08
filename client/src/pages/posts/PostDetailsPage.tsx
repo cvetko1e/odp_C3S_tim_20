@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { postApi } from "../../api_services/posts/PostAPIService";
+import { communityApi } from "../../api_services/communities/CommunityAPIService";
 import { LikeButton } from "../../components/posts/LikeButton";
 import { CommentList } from "../../components/comments/CommentList";
 import { useAuth } from "../../hooks/auth/useAuthHook";
@@ -13,6 +14,7 @@ export const PostDetailsPage: React.FC = () => {
 
   const [post, setPost] = useState<Post>(emptyPost);
   const [isLiked, setIsLiked] = useState(false);
+  const [canFlagComments, setCanFlagComments] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const postId = Number.parseInt(id || "0", 10);
@@ -26,6 +28,24 @@ export const PostDetailsPage: React.FC = () => {
       setLoading(false);
     });
   }, [postId, token]);
+
+  useEffect(() => {
+    if (post.communityId === 0 || !token || !user) {
+      setCanFlagComments(false);
+      return;
+    }
+
+    if (user.role === "admin") {
+      setCanFlagComments(true);
+      return;
+    }
+
+    communityApi.getCommunityById(post.communityId, token)
+      .then((community) => {
+        setCanFlagComments(community.memberRole === "moderator" && community.memberStatus === "active");
+      })
+      .catch(() => setCanFlagComments(false));
+  }, [post.communityId, token, user]);
 
   const handleLikeToggle = async () => {
     if (post.id === 0 || !token) return;
@@ -130,7 +150,7 @@ export const PostDetailsPage: React.FC = () => {
         </div>
       </div>
       
-          <CommentList postId={postId} currentUserId={user?.id ?? null} />
+          <CommentList postId={postId} currentUserId={user?.id ?? null} canFlagComments={canFlagComments} />
       </div>
 
   );

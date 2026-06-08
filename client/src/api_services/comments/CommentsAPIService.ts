@@ -46,6 +46,13 @@ export const commentsApi: ICommentsAPIService = {
       .catch((e) => err(e, "Failed to delete comment"));
   },
 
+  async flag(id) {
+    return axios
+      .patch<ApiResponse<void>>(`${BASE}/${id}/flag`, {}, { headers: authHeader() })
+      .then((r) => r.data)
+      .catch((e) => err(e, "Failed to flag comment"));
+  },
+
   async like(id) {
     return axios
       .post<ApiResponse<void>>(`${BASE}/${id}/like`, {}, { headers: authHeader() })

@@ -15,6 +15,7 @@ export interface ICommunityRepository {
   update(id: number, dto: UpdateCommunityDto): Promise<boolean>;
   delete(id: number): Promise<boolean>;
   isMember(communityId: number, userId: number): Promise<boolean>;
+  isActiveMember(communityId: number, userId: number): Promise<boolean>;
   isModerator(communityId: number, userId: number): Promise<boolean>;
   joinCommunity(communityId: number, userId: number): Promise<boolean>;
   leaveCommunity(communityId: number, userId: number): Promise<boolean>;

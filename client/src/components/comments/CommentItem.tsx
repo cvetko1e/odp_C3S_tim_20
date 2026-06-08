@@ -6,13 +6,15 @@ import { Button, Card, TextArea } from "../ui/UI";
 interface CommentItemProps {
   comment: CommentDto;
   currentUserId: number;
+  canFlagComments: boolean;
   depth?: number;
   onReplyPosted: () => void;
 }
 
-export const CommentItem: React.FC<CommentItemProps> = ({ comment, currentUserId, depth = 0, onReplyPosted }) => {
+export const CommentItem: React.FC<CommentItemProps> = ({ comment, currentUserId, canFlagComments, depth = 0, onReplyPosted }) => {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(comment.likesCount);
+  const [flagged, setFlagged] = useState(comment.isFlagged === 1);
   const [replying, setReplying] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   const [editing, setEditing] = useState(false);
@@ -45,6 +47,17 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, currentUserId
     if (response.success) setDeleted(true);
   };
 
+  const handleFlag = async () => {
+    if (!window.confirm("Flag this comment as a rule violation?")) return;
+    setLoading(true);
+    const response = await commentsApi.flag(comment.id);
+    if (response.success) {
+      setFlagged(true);
+      onReplyPosted();
+    }
+    setLoading(false);
+  };
+
   const handleEdit = async () => {
     if (!editContent.trim()) return;
     setLoading(true);
@@ -73,7 +86,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, currentUserId
       <Card className="mb-2 p-4">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-xs font-semibold text-gray-700">@{comment.authorUsername ?? "korisnik"}</span>
-          <span className="text-xs text-gray-400">{comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ""}</span>
+          <div className="flex items-center gap-2">
+            {flagged && <span className="rounded bg-yellow-100 px-2 py-0.5 text-[11px] font-semibold text-yellow-800">Flagged</span>}
+            <span className="text-xs text-gray-400">{comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ""}</span>
+          </div>
         </div>
 
         {isDeleted ? (
@@ -96,6 +112,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, currentUserId
               {liked ? "Unlike" : "Like"} ({likesCount})
             </button>
             {canReply && <button onClick={() => setReplying((value) => !value)} className="text-xs font-medium text-gray-500 hover:text-gray-900">Reply</button>}
+            {canFlagComments && !flagged && (
+              <button onClick={handleFlag} disabled={loading} className="text-xs font-medium text-yellow-700 hover:text-yellow-800">Flag</button>
+            )}
             {isOwn && (
               <>
                 <button onClick={() => setEditing(true)} className="text-xs font-medium text-gray-500 hover:text-gray-900">Edit</button>
@@ -119,7 +138,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, currentUserId
       {comment.replies && comment.replies.length > 0 && (
         <div className="mb-2">
           {comment.replies.map((reply) => (
-            <CommentItem key={reply.id} comment={reply} currentUserId={currentUserId} depth={depth + 1} onReplyPosted={onReplyPosted} />
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              currentUserId={currentUserId}
+              canFlagComments={canFlagComments}
+              depth={depth + 1}
+              onReplyPosted={onReplyPosted}
+            />
           ))}
         </div>
       )}

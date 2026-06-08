@@ -1,10 +1,12 @@
 import { Post } from '../../models/Post';
 import { ServiceResult } from '../../types/ServiceResult';
+import { UserRole } from '../../enums/UserRole';
+import { PostSortBy } from '../../repositories/Post/IPostRepository';
 
 export interface IPostService {
-  getPostById(id: number): Promise<Post>;
+  getPostById(id: number, viewerId?: number, viewerRole?: UserRole): Promise<ServiceResult<Post>>;
   getAllPosts(): Promise<Post[]>;
-  getPostsByCommunity(communityId: number): Promise<Post[]>;
+  getPostsByCommunity(communityId: number, sortBy?: PostSortBy, viewerId?: number, viewerRole?: UserRole): Promise<ServiceResult<Post[]>>;
   getHomeFeed(userId: number): Promise<Post[]>;
   createPost(
     title: string,

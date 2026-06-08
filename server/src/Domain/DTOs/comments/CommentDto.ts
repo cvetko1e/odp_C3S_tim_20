@@ -10,6 +10,7 @@ export class CommentDto {
     public updatedAt: string | null = null,
     public authorUsername: string | null = null,
     public likesCount: number = 0,
+    public isFlagged: number = 0,
     public replies: CommentDto[] = []
   ) {}
 }

@@ -11,6 +11,7 @@ type CommentRow = RowDataPacket & {
   parentId: number | null;
   content: string;
   isDeleted: number;
+  isFlagged: number;
   createdAt: Date | null;
   updatedAt: Date | null;
   authorUsername: string | null;
@@ -38,6 +39,7 @@ export class CommentRepository implements ICommentRepository {
       row.updatedAt ? new Date(row.updatedAt).toISOString() : null,
       row.authorUsername,
       row.likesCount ?? 0,
+      row.isFlagged ?? 0,
       [],
     );
   }
@@ -46,7 +48,7 @@ export class CommentRepository implements ICommentRepository {
     const [rows] = await conn.execute<CommentRow[]>(
       `SELECT c.id, c.postId, c.authorId, c.parentId,
               CASE WHEN c.isDeleted = 1 THEN '[comment deleted]' ELSE c.content END AS content,
-              c.isDeleted, c.createdAt, c.updatedAt,
+              c.isDeleted, c.isFlagged, c.createdAt, c.updatedAt,
               u.username AS authorUsername,
               (SELECT COUNT(*) FROM comment_likes WHERE commentId = c.id) AS likesCount
        FROM comments c
@@ -72,7 +74,7 @@ export class CommentRepository implements ICommentRepository {
       const [rows] = await read.conn.execute<CommentRow[]>(
         `SELECT c.id, c.postId, c.authorId, c.parentId,
                 CASE WHEN c.isDeleted = 1 THEN '[comment deleted]' ELSE c.content END AS content,
-                c.isDeleted, c.createdAt, c.updatedAt,
+                c.isDeleted, c.isFlagged, c.createdAt, c.updatedAt,
                 u.username AS authorUsername,
                 (SELECT COUNT(*) FROM comment_likes WHERE commentId = c.id) AS likesCount
          FROM comments c
@@ -196,6 +198,55 @@ export class CommentRepository implements ICommentRepository {
       return false;
     } finally {
       write.conn.release();
+    }
+  }
+
+  public async flag(id: number): Promise<boolean> {
+    const write = await this.db.getWriteConnection();
+    if (!write) {
+      return false;
+    }
+
+    try {
+      const [result] = await write.conn.execute<ResultSetHeader>(
+        `UPDATE comments
+         SET isFlagged = 1, updatedAt = CURRENT_TIMESTAMP
+         WHERE id = ? AND isDeleted = 0`,
+        [id],
+      );
+      return result.affectedRows > 0;
+    } catch (error) {
+      this.logger.error("CommentRepository", "flag failed", error);
+      return false;
+    } finally {
+      write.conn.release();
+    }
+  }
+
+  public async canModerateComment(commentId: number, userId: number): Promise<boolean> {
+    const read = await this.db.getPrimaryReadConnection();
+    if (!read) {
+      return false;
+    }
+
+    try {
+      const [rows] = await read.conn.execute<CountRow[]>(
+        `SELECT COUNT(*) AS cnt
+         FROM comments c
+         INNER JOIN posts p ON p.id = c.postId
+         INNER JOIN community_members cm ON cm.communityId = p.communityId
+         WHERE c.id = ?
+           AND cm.userId = ?
+           AND cm.role = 'moderator'
+           AND cm.status = 'active'`,
+        [commentId, userId],
+      );
+      return (rows[0]?.cnt ?? 0) > 0;
+    } catch (error) {
+      this.logger.error("CommentRepository", "canModerateComment failed", error);
+      return false;
+    } finally {
+      read.conn.release();
     }
   }
 

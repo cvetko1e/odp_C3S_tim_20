@@ -7,9 +7,10 @@ import type { CommentDto } from "../../models/comments/CommentTypes";
 interface CommentListProps {
   postId: number;
   currentUserId: number | null;
+  canFlagComments?: boolean;
 }
 
-export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId }) => {
+export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId, canFlagComments = false }) => {
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -101,6 +102,7 @@ export const CommentList: React.FC<CommentListProps> = ({ postId, currentUserId 
               key={comment.id}
               comment={comment}
               currentUserId={currentUserId ?? 0}
+              canFlagComments={canFlagComments}
               depth={0}
               onReplyPosted={load}
             />
