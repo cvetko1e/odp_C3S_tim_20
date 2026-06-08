@@ -21,7 +21,7 @@ export const ProtectedRoute: React.FC<{
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <Spinner size={24} />
       </div>
     );
@@ -32,7 +32,7 @@ export const ProtectedRoute: React.FC<{
   }
 
   if (roleRank[role] < roleRank[requiredRole]) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/403" replace />;
   }
 
   return <Layout>{children}</Layout>;

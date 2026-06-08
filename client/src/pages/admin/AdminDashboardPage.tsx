@@ -13,17 +13,17 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#502e2e]">
+    <div>
       <PageHeader eyebrow="Admin" title="Dashboard" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
         {tiles.map((t) => (
           <button
             key={t.path}
             onClick={() => navigate(t.path)}
-            className="bg-white/3 border border-white/6 rounded-2xl p-6 text-left hover:border-white/12 hover:bg-white/5 transition-all"
+            className="rounded-lg border border-gray-200 bg-white p-6 text-left shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
           >
             <p className={`text-lg font-semibold ${t.color}`}>{t.label}</p>
-            <p className="text-xs text-white/30 mt-1">{t.sub}</p>
+            <p className="mt-1 text-sm text-gray-500">{t.sub}</p>
           </button>
         ))}
       </div>

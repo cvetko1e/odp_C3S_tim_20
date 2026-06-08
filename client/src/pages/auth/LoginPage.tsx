@@ -14,7 +14,7 @@ export default function LoginPage() {
   }, [isAuthenticated, user, navigate]);
 
   return (
-    <main className="min-h-screen bg-[#502e2e] flex items-center justify-center px-4">
+    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-10">
       <LoginForm authApi={authApi} />
     </main>
   );

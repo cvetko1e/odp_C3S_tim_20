@@ -97,7 +97,7 @@ export default function AdminHealthPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <Spinner size={28} />
       </div>
     );
@@ -112,7 +112,7 @@ export default function AdminHealthPage() {
           <button
             onClick={handleFailover}
             disabled={failoverLoading}
-            className="px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 text-sm hover:bg-red-500/15 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {failoverLoading ? "Running..." : "Manual failover"}
           </button>
@@ -155,26 +155,26 @@ export default function AdminHealthPage() {
               />
               <tbody>
                 {health.nodes.map((node) => (
-                  <tr key={node.name} className="border-b border-white/5 last:border-0">
-                    <td className="px-5 py-3.5 text-white/80 font-medium">
+                  <tr key={node.name} className="border-b border-gray-200 last:border-0 hover:bg-gray-50">
+                    <td className="px-5 py-3.5 font-medium text-gray-900">
                       {node.name}
                     </td>
-                    <td className="px-5 py-3.5 text-white/45">
+                    <td className="px-5 py-3.5 text-gray-600">
                       {node.role}
                     </td>
-                    <td className="px-5 py-3.5 text-white/45">
+                    <td className="px-5 py-3.5 text-gray-600">
                       {node.host}
                     </td>
-                    <td className="px-5 py-3.5 text-white/45">
+                    <td className="px-5 py-3.5 text-gray-600">
                       {node.port}
                     </td>
                     <td className="px-5 py-3.5">
                       <NodeBadge status={node.status} />
                     </td>
-                    <td className="px-5 py-3.5 text-white/45">
+                    <td className="px-5 py-3.5 text-gray-600">
                       {node.responseTimeMs >= 0 ? `${node.responseTimeMs}ms` : "-"}
                     </td>
-                    <td className="px-5 py-3.5 text-white/35">
+                    <td className="px-5 py-3.5 text-gray-500">
                       {new Date(node.lastCheck).toLocaleString()}
                     </td>
                   </tr>

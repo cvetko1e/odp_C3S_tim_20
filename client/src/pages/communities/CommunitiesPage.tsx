@@ -64,12 +64,12 @@ export default function CommunitiesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#502e2e] text-white">
-      <div className="max-w-5xl mx-auto px-6 py-8">
+    <main>
+      <div>
         <PageHeader eyebrow="Community" title="Communities" />
         {error && <ErrorBox message={error} />}
         {success && !error && <SuccessBox message={success} />}
-        {loading && !error && <p className="mt-4 text-sm text-white/70">Loading communities...</p>}
+        {loading && !error && <p className="mt-4 text-sm text-gray-500">Loading communities...</p>}
         {!loading && !error && items.length === 0 && <Empty message="No communities found." />}
         {!loading && items.length > 0 && (
           <div className="mt-4 grid gap-4">

@@ -5,7 +5,9 @@ import { postApi } from "../../api_services/posts/PostAPIService";
 import { useAuth } from "../../hooks/auth/useAuthHook";
 import { emptyCommunity, type Community, type CommunityMember, type CommunityMemberRole, type CommunityMemberStatus } from "../../types/communities/Community";
 import type { Post } from "../../types/posts/Post";
-import { Empty, ErrorBox, PageHeader, SuccessBox } from "../../components/ui/UI";
+import { Badge, Button, Card, Empty, ErrorBox, PageHeader, Select, SuccessBox } from "../../components/ui/UI";
+
+type SortMode = "newest" | "popular" | "commented";
 
 export default function CommunityDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -17,6 +19,7 @@ export default function CommunityDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
 
   const id = useMemo(() => {
     if (!params.id) return 0;
@@ -25,16 +28,22 @@ export default function CommunityDetailsPage() {
   }, [params.id]);
 
   const canModerate = user?.role === "admin" || community.memberRole === "moderator";
+  const canCreatePost = !!token && (community.type === "public" || community.memberStatus === "active" || community.memberRole === "moderator" || user?.role === "admin");
+
+  const sortedPosts = useMemo(() => {
+    const next = [...posts];
+    if (sortMode === "popular") return next.sort((a, b) => b.likesCount - a.likesCount);
+    if (sortMode === "commented") return next.sort((a, b) => b.commentsCount - a.commentsCount);
+    return next.sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
+  }, [posts, sortMode]);
 
   const loadMembers = useCallback(async () => {
     if (!token || id === 0) return;
-    const data = await communityApi.getMembers(token, id);
-    setMembers(data);
+    setMembers(await communityApi.getMembers(token, id));
   }, [id, token]);
 
   const loadCommunity = useCallback(async () => {
     if (id === 0) return;
-
     setLoading(true);
     try {
       const [item, communityPosts] = await Promise.all([
@@ -46,19 +55,12 @@ export default function CommunityDetailsPage() {
         setCommunity(emptyCommunity);
         setPosts([]);
         setError("Community not found");
-        setLoading(false);
         return;
       }
 
       const myCommunities = token ? await communityApi.getMyCommunities(token) : [];
       const membership = myCommunities.find((myCommunity) => myCommunity.id === item.id);
-      const nextCommunity = {
-        ...item,
-        memberRole: membership?.memberRole ?? item.memberRole,
-        memberStatus: membership?.memberStatus ?? item.memberStatus,
-      };
-
-      setCommunity(nextCommunity);
+      setCommunity({ ...item, memberRole: membership?.memberRole ?? item.memberRole, memberStatus: membership?.memberStatus ?? item.memberStatus });
       setPosts(communityPosts);
       setError("");
     } catch {
@@ -68,45 +70,36 @@ export default function CommunityDetailsPage() {
     }
   }, [id, token]);
 
-  useEffect(() => {
-    void loadCommunity();
-  }, [loadCommunity]);
-
-  useEffect(() => {
-    if (canModerate) void loadMembers();
-  }, [canModerate, loadMembers]);
+  useEffect(() => { void loadCommunity(); }, [loadCommunity]);
+  useEffect(() => { if (canModerate) void loadMembers(); }, [canModerate, loadMembers]);
 
   const handleJoin = () => {
     if (!token || id === 0) return;
-    communityApi.joinCommunity(token, id)
-      .then((result) => {
-        if (!result.success) {
-          setSuccess("");
-          setError(result.message ?? "Join failed");
-          return;
-        }
-        setError("");
-        setSuccess(result.message ?? "Joined community successfully");
-        return loadCommunity();
-      })
-      .catch(() => {
+    communityApi.joinCommunity(token, id).then((result) => {
+      if (!result.success) {
         setSuccess("");
-        setError("Join failed");
-      });
+        setError(result.message ?? "Join failed");
+        return;
+      }
+      setError("");
+      setSuccess(result.message ?? "Joined community successfully");
+      return loadCommunity();
+    }).catch(() => {
+      setSuccess("");
+      setError("Join failed");
+    });
   };
 
   const handleLeave = () => {
     if (!token || id === 0) return;
-    communityApi.leaveCommunity(token, id)
-      .then((ok) => {
-        if (!ok) {
-          setError("Leave failed");
-          return;
-        }
-        setSuccess("Left community");
-        return loadCommunity();
-      })
-      .catch(() => setError("Leave failed"));
+    communityApi.leaveCommunity(token, id).then((ok) => {
+      if (!ok) {
+        setError("Leave failed");
+        return;
+      }
+      setSuccess("Left community");
+      return loadCommunity();
+    }).catch(() => setError("Leave failed"));
   };
 
   const runMemberAction = async (action: Promise<{ success: boolean; message?: string }>) => {
@@ -123,115 +116,92 @@ export default function CommunityDetailsPage() {
   };
 
   const changeRole = (memberId: number, role: CommunityMemberRole) => {
-    if (!token) return;
-    void runMemberAction(communityApi.updateMemberRole(token, id, memberId, role));
+    if (token) void runMemberAction(communityApi.updateMemberRole(token, id, memberId, role));
   };
 
   const changeStatus = (memberId: number, status: CommunityMemberStatus) => {
-    if (!token) return;
-    void runMemberAction(communityApi.updateMemberStatus(token, id, memberId, status));
+    if (token) void runMemberAction(communityApi.updateMemberStatus(token, id, memberId, status));
   };
 
   const removeMember = (memberId: number) => {
-    if (!token) return;
-    void runMemberAction(communityApi.removeMember(token, id, memberId));
+    if (token) void runMemberAction(communityApi.removeMember(token, id, memberId));
   };
 
   return (
-    <div className="min-h-screen bg-[#502e2e]">
-      <PageHeader eyebrow="Community" title={community.name || "Community Details"} />
+    <div className="space-y-6">
+      <PageHeader eyebrow="Community" title={community.name || "Community Details"} action={canCreatePost ? <Button onClick={() => navigate(`/communities/${id}/posts/create`)}>Create post</Button> : undefined} />
       {id === 0 && <ErrorBox message="Invalid community id" />}
       {id !== 0 && error && <ErrorBox message={error} />}
       {id !== 0 && success && !error && <SuccessBox message={success} />}
-      {id !== 0 && loading && <p className="mt-4 text-sm text-white/70">Loading...</p>}
-      {id !== 0 && !loading && !error && community.id === 0 && <p className="mt-4 text-sm text-white/70">Community not found.</p>}
+      {id !== 0 && loading && <p className="text-sm text-gray-500">Loading...</p>}
 
-        {community.id !== 0 && (
-          <section className="bg-white/2 border border-white/8 rounded-2xl p-5 space-y-3">
-            <p className="text-white/70 text-sm">{community.description ?? "No description"}</p>
-            <p className="text-white/40 text-sm"><span className="text-white/60">Rules:</span> {community.rules ?? "No rules"}</p>
-            <p className="text-white/40 text-sm"><span className="text-white/60">Type:</span> {community.type}</p>
-            <p className="text-white/40 text-sm"><span className="text-white/60">Created:</span> {community.createdAt ?? "n/a"}</p>
-            {community.memberRole === "moderator" && <p className="text-white/40 text-sm"><span className="text-white/60">Membership:</span> Moderator</p>}
-            {community.memberRole !== "moderator" && community.memberStatus === "pending" && <p className="text-white/40 text-sm"><span className="text-white/60">Membership:</span> Pending request</p>}
-            {community.memberRole !== "moderator" && community.memberStatus === "active" && <p className="text-white/40 text-sm"><span className="text-white/60">Membership:</span> Member</p>}
+      {community.id !== 0 && (
+        <Card className="space-y-3 p-5">
+          <p className="text-sm text-gray-700">{community.description ?? "No description"}</p>
+          <p className="text-sm text-gray-600"><span className="font-medium text-gray-900">Rules:</span> {community.rules ?? "No rules"}</p>
+          <div className="flex flex-wrap gap-2">
+            <Badge tone="blue">{community.type}</Badge>
+            {community.memberRole === "moderator" && <Badge tone="indigo">Moderator</Badge>}
+            {community.memberStatus === "pending" && <Badge tone="yellow">Pending request</Badge>}
+            {community.memberStatus === "active" && <Badge tone="green">Member</Badge>}
+          </div>
+          <div className="flex flex-wrap gap-2 pt-2">
+            {token && community.memberRole !== "moderator" && community.memberStatus !== "active" && community.memberStatus !== "pending" && <Button onClick={handleJoin}>Join</Button>}
+            {token && community.memberRole !== "moderator" && community.memberStatus === "active" && <Button variant="secondary" onClick={handleLeave}>Leave</Button>}
+            {!token && <p className="text-xs text-gray-500">Log in to join this community.</p>}
+          </div>
+        </Card>
+      )}
 
-            <div className="flex gap-2 pt-2">
-              {token && community.memberRole !== "moderator" && community.memberStatus !== "active" && community.memberStatus !== "pending" && (
-                <button onClick={handleJoin} className="px-3 py-2 text-xs rounded-lg border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 transition-colors">
-                  Join
-                </button>
-              )}
-              {token && community.memberRole !== "moderator" && community.memberStatus === "active" && (
-                <button onClick={handleLeave} className="px-3 py-2 text-xs rounded-lg border border-amber-500/30 text-amber-300 hover:bg-amber-500/10 transition-colors">
-                  Leave
-                </button>
-              )}
-              {!token && <p className="text-xs text-white/35">Prijavite se da biste se pridruzili zajednici.</p>}
-            </div>
-          </section>
-        )}
-
-        {canModerate && (
-          <section className="space-y-3">
-            <h2 className="text-sm font-mono uppercase tracking-widest text-white/25">Members</h2>
-            {members.length === 0 ? (
-              <Empty message="No members found." />
-            ) : (
-              <div className="grid gap-3">
-                {members.map((member) => (
-                  <div key={member.id} className="bg-white/3 border border-white/6 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white">@{member.username}</p>
-                      <p className="text-xs text-white/35">{member.memberRole} / {member.memberStatus}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {member.memberStatus === "pending" && (
-                        <button onClick={() => changeStatus(member.id, "active")} className="px-3 py-1.5 text-xs rounded-lg border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10">Accept</button>
-                      )}
-                      {member.memberStatus !== "banned" && (
-                        <button onClick={() => changeStatus(member.id, "banned")} className="px-3 py-1.5 text-xs rounded-lg border border-amber-500/30 text-amber-300 hover:bg-amber-500/10">Ban</button>
-                      )}
-                      {member.memberStatus === "banned" && (
-                        <button onClick={() => changeStatus(member.id, "active")} className="px-3 py-1.5 text-xs rounded-lg border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10">Unban</button>
-                      )}
-                      {member.memberStatus === "active" && member.memberRole === "member" && (
-                        <button onClick={() => changeRole(member.id, "moderator")} className="px-3 py-1.5 text-xs rounded-lg border border-sky-500/30 text-sky-300 hover:bg-sky-500/10">Make moderator</button>
-                      )}
-                      {member.memberStatus === "active" && member.memberRole === "moderator" && member.id !== user?.id && (
-                        <button onClick={() => changeRole(member.id, "member")} className="px-3 py-1.5 text-xs rounded-lg border border-violet-500/30 text-violet-300 hover:bg-violet-500/10">Make member</button>
-                      )}
-                      {member.id !== user?.id && (
-                        <button onClick={() => removeMember(member.id)} className="px-3 py-1.5 text-xs rounded-lg border border-red-500/30 text-red-300 hover:bg-red-500/10">Remove</button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
+      {canModerate && (
         <section className="space-y-3">
-          <h2 className="text-sm font-mono uppercase tracking-widest text-white/25">Posts</h2>
-          {posts.length === 0 ? (
-            <Empty message="No posts in this community." />
-          ) : (
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">Members</h2>
+          {members.length === 0 ? <Empty message="No members found." /> : (
             <div className="grid gap-3">
-              {posts.map((post) => (
-                <button
-                  key={post.id}
-                  onClick={() => navigate(`/posts/${post.id}`)}
-                  className="text-left bg-white/3 border border-white/6 rounded-xl p-4 hover:border-white/12 hover:bg-white/5 transition-colors"
-                >
-                  <p className="text-base font-semibold text-white">{post.title}</p>
-                  <p className="text-sm text-white/45 mt-1 line-clamp-2">{post.content}</p>
-                  <p className="text-xs text-white/30 mt-3">@{post.authorUsername ?? "korisnik"} · {post.likesCount} lajkova · {post.commentsCount} komentara</p>
-                </button>
+              {members.map((member) => (
+                <Card key={member.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">@{member.username}</p>
+                    <p className="text-xs text-gray-500">{member.memberRole} / {member.memberStatus}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {member.memberStatus === "pending" && <Button onClick={() => changeStatus(member.id, "active")} className="px-3 py-1.5 text-xs">Accept</Button>}
+                    {member.memberStatus !== "banned" && <Button variant="secondary" onClick={() => changeStatus(member.id, "banned")} className="px-3 py-1.5 text-xs">Ban</Button>}
+                    {member.memberStatus === "banned" && <Button onClick={() => changeStatus(member.id, "active")} className="px-3 py-1.5 text-xs">Unban</Button>}
+                    {member.memberStatus === "active" && member.memberRole === "member" && <Button variant="secondary" onClick={() => changeRole(member.id, "moderator")} className="px-3 py-1.5 text-xs">Make moderator</Button>}
+                    {member.memberStatus === "active" && member.memberRole === "moderator" && member.id !== user?.id && <Button variant="secondary" onClick={() => changeRole(member.id, "member")} className="px-3 py-1.5 text-xs">Make member</Button>}
+                    {member.id !== user?.id && <Button variant="danger" onClick={() => removeMember(member.id)} className="px-3 py-1.5 text-xs">Remove</Button>}
+                  </div>
+                </Card>
               ))}
             </div>
           )}
         </section>
-      </div>
+      )}
+
+      <section className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">Posts</h2>
+          <Select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)} className="sm:w-48">
+            <option value="newest">Newest</option>
+            <option value="popular">Popular</option>
+            <option value="commented">Most commented</option>
+          </Select>
+        </div>
+        {sortedPosts.length === 0 ? <Empty message="No posts in this community." /> : (
+          <div className="grid gap-3">
+            {sortedPosts.map((post) => (
+              <Card key={post.id} className="p-4 transition-colors hover:border-blue-200 hover:bg-blue-50">
+                <button onClick={() => navigate(`/posts/${post.id}`)} className="w-full text-left">
+                  <p className="text-base font-semibold text-gray-900">{post.title}</p>
+                  <p className="mt-1 line-clamp-2 text-sm text-gray-600">{post.content}</p>
+                  <p className="mt-3 text-xs text-gray-500">@{post.authorUsername ?? "user"} - {post.likesCount} likes - {post.commentsCount} comments</p>
+                </button>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
