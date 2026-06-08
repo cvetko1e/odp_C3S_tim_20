@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/auth/useAuthHook";
 import type { IAuthAPIService } from "../../api_services/auth/IAuthAPIService";
@@ -7,6 +8,8 @@ import { validateLogin } from "../../helpers/validators";
 
 export function LoginForm({ authApi }: { authApi: IAuthAPIService }) {
   const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -53,9 +56,17 @@ export function LoginForm({ authApi }: { authApi: IAuthAPIService }) {
           <label className="mb-2 block text-sm font-medium text-gray-700">Password</label>
           <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" />
         </div>
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Signing in..." : "Sign in"}
-        </Button>
+        <button type="submit" disabled={loading}
+          className="mt-2 bg-white hover:bg-white/90 disabled:opacity-50 text-black font-semibold rounded-xl py-3 text-sm transition-colors">
+          {loading ? "Signing in…" : "Sign in"}
+        </button>
+        <button
+           type="button"
+           onClick={() => navigate("/communities")}
+           className="border border-white/10 text-white/50 hover:text-white hover:bg-white/5 font-medium rounded-xl py-3 text-sm transition-colors"
+           >
+           Continue as guest
+          </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-500">
