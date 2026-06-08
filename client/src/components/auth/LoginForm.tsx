@@ -1,4 +1,4 @@
-import { useState } from "react";
+ï»¿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/auth/useAuthHook";
@@ -56,17 +56,17 @@ export function LoginForm({ authApi }: { authApi: IAuthAPIService }) {
           <label className="mb-2 block text-sm font-medium text-gray-700">Password</label>
           <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" />
         </div>
-        <button type="submit" disabled={loading}
-          className="mt-2 bg-white hover:bg-white/90 disabled:opacity-50 text-black font-semibold rounded-xl py-3 text-sm transition-colors">
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-        <button
-           type="button"
-           onClick={() => navigate("/communities")}
-           className="border border-white/10 text-white/50 hover:text-white hover:bg-white/5 font-medium rounded-xl py-3 text-sm transition-colors"
-           >
-           Continue as guest
-          </button>
+        <Button type="submit" disabled={loading} className="mt-2 w-full">
+          {loading ? "Signing in..." : "Sign in"}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => navigate("/communities")}
+          className="w-full"
+        >
+          Continue as guest
+        </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-500">
@@ -75,3 +75,4 @@ export function LoginForm({ authApi }: { authApi: IAuthAPIService }) {
     </Card>
   );
 }
+
