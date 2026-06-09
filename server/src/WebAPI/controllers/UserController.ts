@@ -4,6 +4,8 @@ import { IAuditService } from "../../Domain/services/Audit/IAuditService";
 import { authenticate } from "../../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../../Middlewares/authorization/AuthorizeMiddleware";
 import { UserRole } from "../../Domain/enums/UserRole";
+import { UpdateUserProfileDto } from "../../Domain/DTOs/users/UpdateUserProfileDto";
+import { validateUserProfile } from "../validators/users/validateUserProfile";
 
 export class UserController {
     private readonly router = Router();
@@ -13,6 +15,7 @@ export class UserController {
         private readonly auditService: IAuditService,
     ) {
         this.router.get("/users", authenticate, authorize(UserRole.ADMIN), this.getAll.bind(this));
+        this.router.put("/users/me", authenticate, this.updateMe.bind(this));
         this.router.get("/users/:id", this.getById.bind(this));
         this.router.patch("/users/:id/deactivate", authenticate, authorize(UserRole.ADMIN), this.deactivate.bind(this));
         this.router.put("/users/:id/role", authenticate, authorize(UserRole.ADMIN), this.changeRole.bind(this));
@@ -32,6 +35,36 @@ export class UserController {
             const id = parseInt(req.params.id as string, 10);
             if (isNaN(id)) { res.status(400).json({ success: false, message: "Invalid id" }); return; }
             const result = await this.userService.getById(id);
+            res.status(result.status).json({ success: result.success, message: result.message, data: result.data });
+        } catch {
+            res.status(500).json({ success: false, message: "Internal server error" });
+        }
+    }
+
+    private async updateMe(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.user?.id;
+            if (!userId) { res.status(401).json({ success: false, message: "Unauthorized" }); return; }
+
+            const dto = new UpdateUserProfileDto(
+                typeof req.body.username === "string" ? req.body.username.trim() : undefined,
+                typeof req.body.firstName === "string" ? req.body.firstName.trim() : undefined,
+                typeof req.body.lastName === "string" ? req.body.lastName.trim() : undefined,
+                typeof req.body.email === "string" ? req.body.email.trim() : undefined,
+                typeof req.body.bio === "string" ? req.body.bio.trim() : undefined,
+                typeof req.body.profileImage === "string" ? req.body.profileImage.trim() : undefined,
+            );
+
+            const validation = validateUserProfile(dto);
+            if (!validation.valid) {
+                res.status(400).json({ success: false, message: validation.message ?? "Invalid input" });
+                return;
+            }
+
+            const result = await this.userService.updateMe(userId, dto);
+            if (result.success) {
+                await this.auditService.log("UPDATE_PROFILE", userId, "user", userId, undefined, req.ip);
+            }
             res.status(result.status).json({ success: result.success, message: result.message, data: result.data });
         } catch {
             res.status(500).json({ success: false, message: "Internal server error" });

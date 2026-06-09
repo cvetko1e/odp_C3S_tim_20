@@ -74,7 +74,11 @@ export function Layout({ children }: { children: ReactNode }) {
       <div className="border-t border-gray-200 p-4">
         {isAuthenticated && user ? (
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
+            <Link
+              to={`/users/${user.id}`}
+              onClick={close}
+              className="flex items-center gap-3 rounded-lg p-2 -m-2 transition-colors hover:bg-gray-50"
+            >
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-700">
                 {user.username.slice(0, 1).toUpperCase()}
               </div>
@@ -82,7 +86,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 <p className="truncate text-sm font-medium text-gray-900">{user.username}</p>
                 <RoleBadge role={user.role} />
               </div>
-            </div>
+            </Link>
             <Button
               variant="secondary"
               className="w-full"
@@ -124,7 +128,9 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <span className="hidden text-sm font-medium text-gray-700 sm:inline">{user.username}</span>
+                <Link to={`/users/${user.id}`} className="hidden text-sm font-medium text-gray-700 hover:text-gray-950 sm:inline">
+                  {user.username}
+                </Link>
                 <RoleBadge role={user.role} />
               </>
             ) : (

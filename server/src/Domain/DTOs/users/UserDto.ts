@@ -9,5 +9,9 @@ export class UserDto {
     public isActive: number       = 1,
     public followersCount: number = 0,
     public followingCount: number = 0,
+    public firstName: string      = "",
+    public lastName: string       = "",
+    public bio: string            = "",
+    public profileImage: string   = "",
   ) {}
 }

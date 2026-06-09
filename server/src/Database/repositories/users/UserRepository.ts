@@ -4,6 +4,7 @@ import { User } from "../../../Domain/models/User";
 import { UserRole } from "../../../Domain/enums/UserRole";
 import { DbManager } from "../../connection/DbManager";;
 import { ILoggerService } from "../../../Domain/services/logger/ILoggerService";
+import { UpdateUserProfileDto } from "../../../Domain/DTOs/users/UpdateUserProfileDto";
 
 export class UserRepository implements IUserRepository {
   public constructor(
@@ -122,6 +123,32 @@ export class UserRepository implements IUserRepository {
       return result.affectedRows > 0;
     } catch (err) {
       this.logger.error("UserRepository", "update failed", err);
+      return false;
+    } finally { res.conn.release(); }
+  }
+
+  public async updateProfile(id: number, dto: UpdateUserProfileDto): Promise<boolean> {
+    const res = await this.db.getWriteConnection();
+    if (!res) return false;
+    try {
+      const values: Array<string | number> = [
+        dto.username ?? "",
+        dto.firstName ?? "",
+        dto.lastName ?? "",
+        dto.email ?? "",
+        dto.bio ?? "",
+        dto.profileImage ?? "",
+        id,
+      ];
+      const [result] = await res.conn.execute<ResultSetHeader>(
+        `UPDATE users
+         SET username = ?, firstName = ?, lastName = ?, email = ?, bio = ?, profileImage = ?
+         WHERE id = ? AND isActive = 1`,
+        values,
+      );
+      return result.affectedRows > 0;
+    } catch (err) {
+      this.logger.error("UserRepository", "updateProfile failed", err);
       return false;
     } finally { res.conn.release(); }
   }
