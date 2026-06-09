@@ -17,11 +17,12 @@ const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
 
 export const communityApi: ICommunityAPIService = {
   async getPublicCommunities(): Promise<Community[]> {
-    const response = await axios.get<CommunityListResponse>(API_URL);
-    if (!response.data.success) {
-      throw new Error(response.data.message ?? "Failed to load communities");
+    try {
+      const response = await axios.get<CommunityListResponse>(API_URL);
+      return response.data.success ? (response.data.data ?? []) : [];
+    } catch {
+      return [];
     }
-    return response.data.data ?? [];
   },
 
   async getMyCommunities(token: string): Promise<Community[]> {

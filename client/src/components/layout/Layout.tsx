@@ -23,7 +23,7 @@ const adminNav = [
 ];
 
 function NavSection({ title, items, close }: { title: string; items: { to: string; label: string }[]; close: () => void }) {
-  if (items.length === 0) return null;
+  if (items.length === 0) return <></>;
   return (
     <div className="space-y-1">
       <p className="px-3 pb-2 pt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">{title}</p>

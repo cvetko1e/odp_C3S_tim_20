@@ -58,15 +58,15 @@ export class DbManager {
 
     // ── Connection Routing ────────────────────────────────────────
 
-    public async getWriteConnection(): Promise<{ conn: PoolConnection; nodeName: string } | null> {
+    public async getWriteConnection(): Promise<{ conn: PoolConnection; nodeName: string } | undefined> {
         return this.router.getWriteConnection(this.master);
     }
 
-    public async getReadConnection(): Promise<{ conn: PoolConnection; nodeName: string } | null> {
+    public async getReadConnection(): Promise<{ conn: PoolConnection; nodeName: string } | undefined> {
         return this.router.getReadConnection(this.master, this.slaves);
     }
 
-    public async getPrimaryReadConnection(): Promise<{ conn: PoolConnection; nodeName: string } | null> {
+    public async getPrimaryReadConnection(): Promise<{ conn: PoolConnection; nodeName: string } | undefined> {
         return this.router.getWriteConnection(this.master);
     }
 

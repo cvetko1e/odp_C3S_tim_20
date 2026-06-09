@@ -23,7 +23,7 @@ export class EntityController {
     return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
   }
 
-  private parseStatus(value: string | undefined): EntityStatus | null {
+  private parseStatus(value: string | undefined): EntityStatus | undefined {
     if (
       value === EntityStatus.PENDING ||
       value === EntityStatus.ACTIVE ||
@@ -32,7 +32,7 @@ export class EntityController {
     ) {
       return value;
     }
-    return null;
+    return undefined;
   }
 
   private async getAll(req: Request, res: Response): Promise<void> {

@@ -149,7 +149,7 @@ export function TableHead({ columns }: { columns: string[] }) {
 
 export function Pagination({ page, total, pageSize, onChange }: { page: number; total: number; pageSize: number; onChange: (p: number) => void }) {
   const totalPages = Math.ceil(total / pageSize);
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) return <></>;
   return (
     <div className="mt-5 flex items-center gap-3 text-sm text-gray-500">
       <Button variant="secondary" disabled={page <= 1} onClick={() => onChange(page - 1)}>Previous</Button>

@@ -10,10 +10,10 @@ export class DbConnectionRouter {
 
     public async getWriteConnection(
         master: NodeInfo,
-    ): Promise<{ conn: PoolConnection; nodeName: string } | null> {
+    ): Promise<{ conn: PoolConnection; nodeName: string } | undefined> {
         if (master.node.status === NodeStatus.OFFLINE) {
             this.logger.error("DB", "Master is OFFLINE � write not possible");
-            return null;
+            return undefined;
         }
         try {
             const conn = await master.pool.getConnection();
@@ -23,14 +23,14 @@ export class DbConnectionRouter {
             master.node.status = NodeStatus.OFFLINE;
             master.node.failedQueries++;
             this.logger.error("DB", "Failed to connect to master", err);
-            return null;
+            return undefined;
         }
     }
 
     public async getReadConnection(
   master: NodeInfo,
   slaves: NodeInfo[],
-): Promise<{ conn: PoolConnection; nodeName: string } | null> {
+): Promise<{ conn: PoolConnection; nodeName: string } | undefined> {
   const preferred = slaves.filter((s) => s.node.status === NodeStatus.HEALTHY);
   const fallback = slaves.filter((s) => s.node.status === NodeStatus.DEGRADED);
   const candidates = preferred.length > 0 ? preferred : fallback;
@@ -55,7 +55,7 @@ export class DbConnectionRouter {
 
   if (master.node.status === NodeStatus.OFFLINE) {
     this.logger.error("DB", "Master also offline — read not possible");
-    return null;
+    return undefined;
   }
 
   try {
@@ -65,7 +65,7 @@ export class DbConnectionRouter {
   } catch (err) {
     master.node.status = NodeStatus.OFFLINE;
     this.logger.error("DB", "Failed to connect to master for fallback read", err);
-    return null;
+    return undefined;
   }
 }
 

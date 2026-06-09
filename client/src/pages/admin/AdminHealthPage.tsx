@@ -34,11 +34,11 @@ export default function AdminHealthPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const fetchHealth = async (): Promise<DbHealth> => {
+  const fetchHealth = async (): Promise<DbHealth | undefined> => {
     const response = await healthApi.getDbHealth();
 
     if (!response.success || !response.data) {
-      throw new Error("Failed to load DB health status");
+      return undefined;
     }
 
     return response.data;
@@ -48,7 +48,11 @@ export default function AdminHealthPage() {
     try {
       setError("");
       const nextHealth = await fetchHealth();
-      setHealth(nextHealth);
+      if (nextHealth) {
+        setHealth(nextHealth);
+      } else {
+        setError("Failed to load DB health status");
+      }
     } catch {
       setError("Failed to load DB health status");
     }
@@ -59,7 +63,12 @@ export default function AdminHealthPage() {
 
     void fetchHealth()
       .then((nextHealth) => {
-        if (!cancelled) setHealth(nextHealth);
+        if (cancelled) return;
+        if (nextHealth) {
+          setHealth(nextHealth);
+        } else {
+          setError("Failed to load DB health status");
+        }
       })
       .catch(() => {
         if (!cancelled) setError("Failed to load DB health status");
